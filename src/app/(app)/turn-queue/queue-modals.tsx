@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Scissors, Package, Sandwich, Gamepad2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
 import type { TicketItem } from '@/lib/types';
 import { CustomerForm } from '../customers/customer-form';
+import { cn } from '@/lib/utils';
 
 export function AddBarberToQueueContent() {
   const { staff, barberTurnQueue, addBarberToQueue } = useAppState();
@@ -55,14 +56,27 @@ export function NewServiceForm() {
     const [items, setItems] = useState<TicketItem[]>([]);
     const [selectedItem, setSelectedItem] = useState('');
     const [quantity, setQuantity] = useState(1);
-    
+    const [selectedCategory, setSelectedCategory] = useState<'service' | 'product' | 'snack' | 'gamer' | null>(null);
+
     const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const barbers = staff.filter(s => s.role === 'barber');
 
+    const getItemsForCategory = () => {
+        if (selectedCategory === 'service') return services.filter(s => s.category === 'barberia' || s.category === 'nordico');
+        if (selectedCategory === 'product') return products.filter(p => p.category !== 'Snack');
+        if (selectedCategory === 'snack') return products.filter(p => p.category === 'Snack');
+        if (selectedCategory === 'gamer') return services.filter(s => s.category === 'zona gamer');
+        return [];
+    };
+
     const handleAddItem = () => {
-        if (!selectedItem) return;
+        if (!selectedItem || !selectedCategory) return;
         const [type, id] = selectedItem.split('-');
-        const source = type === 'service' ? services : products;
+        
+        let source;
+        if (type === 'service') source = services;
+        else source = products;
+
         const item = source.find(i => i.id === id);
 
         if (item) {
@@ -98,6 +112,15 @@ export function NewServiceForm() {
         );
     };
 
+    const categoryButtons = [
+        { name: 'Servicio', value: 'service', icon: Scissors },
+        { name: 'Producto', value: 'product', icon: Package },
+        { name: 'Snack', value: 'snack', icon: Sandwich },
+        { name: 'Zona Gamer', value: 'gamer', icon: Gamepad2 }
+    ] as const;
+
+    const itemsForCategory = getItemsForCategory();
+
     return (
         <div className="space-y-4">
             {/* Barber and Customer Selection */}
@@ -126,21 +149,40 @@ export function NewServiceForm() {
             <Separator />
             
             {/* Add Items */}
-            <div className="space-y-2">
-                <Label>Añadir Servicios/Productos</Label>
-                <div className="flex items-center gap-2">
-                    <Select value={selectedItem} onValueChange={setSelectedItem}>
-                        <SelectTrigger><SelectValue placeholder="-- Seleccione un item --" /></SelectTrigger>
-                        <SelectContent>
-                            <div className="px-2 py-1.5 text-sm font-semibold">Servicios</div>
-                            {services.map(s => <SelectItem key={`s-${s.id}`} value={`service-${s.id}`}>{s.name} ({formatCurrency(s.price)})</SelectItem>)}
-                            <div className="px-2 py-1.5 text-sm font-semibold">Productos</div>
-                            {products.map(p => <SelectItem key={`p-${p.id}`} value={`product-${p.id}`}>{p.name} ({formatCurrency(p.price)})</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Input type="number" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} className="w-20" aria-label="Cantidad" />
-                    <Button size="icon" onClick={handleAddItem} disabled={!selectedItem}><Plus className="h-4 w-4" /></Button>
+            <div className="space-y-3">
+                <Label>Añadir Items</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    {categoryButtons.map(cat => (
+                        <Button
+                            key={cat.value}
+                            variant={selectedCategory === cat.value ? 'default' : 'outline'}
+                            onClick={() => {setSelectedCategory(cat.value); setSelectedItem('');}}
+                        >
+                            <cat.icon className="mr-2 h-4 w-4" />
+                            {cat.name}
+                        </Button>
+                    ))}
                 </div>
+
+                {selectedCategory && (
+                    <div className="flex items-center gap-2 animate-fade-in-up">
+                        <Select value={selectedItem} onValueChange={setSelectedItem}>
+                            <SelectTrigger><SelectValue placeholder="-- Seleccione un item --" /></SelectTrigger>
+                            <SelectContent>
+                                {itemsForCategory.length > 0 ? itemsForCategory.map(item => (
+                                    <SelectItem
+                                        key={`${selectedCategory}-${item.id}`}
+                                        value={`${selectedCategory === 'gamer' || selectedCategory === 'service' ? 'service' : 'product'}-${item.id}`}
+                                    >
+                                        {item.name} ({formatCurrency(item.price)})
+                                    </SelectItem>
+                                )) : <div className="p-2 text-center text-sm text-muted-foreground">No hay items.</div>}
+                            </SelectContent>
+                        </Select>
+                        <Input type="number" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} className="w-20" aria-label="Cantidad" />
+                        <Button size="icon" onClick={handleAddItem} disabled={!selectedItem}><Plus className="h-4 w-4" /></Button>
+                    </div>
+                )}
             </div>
 
             {/* Ticket Items */}
