@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
 import type { TicketItem } from '@/lib/types';
 import { CustomerForm } from '../customers/customer-form';
-import { cn } from '@/lib/utils';
 
 export function AddBarberToQueueContent() {
   const { staff, barberTurnQueue, addBarberToQueue } = useAppState();
@@ -69,21 +68,29 @@ export function NewServiceForm() {
         return [];
     };
 
+    const getItemTypeAndSource = (item: { category: string }): { type: 'service' | 'product', source: (typeof services | typeof products) } => {
+        if (item.category === 'barberia' || item.category === 'nordico' || item.category === 'zona gamer') {
+            return { type: 'service', source: services };
+        }
+        return { type: 'product', source: products };
+    };
+
     const handleAddItem = () => {
         if (!selectedItem || !selectedCategory) return;
-        const [type, id] = selectedItem.split('-');
         
-        const source = (type === 'service') ? services : products;
+        const [itemId] = selectedItem.split('_'); // Use only ID, category is for display
+        const categoryItems = getItemsForCategory();
+        const itemToAdd = categoryItems.find(i => i.id === itemId);
 
-        const item = source.find(i => i.id === id);
+        if (itemToAdd) {
+            const { type } = getItemTypeAndSource(itemToAdd);
 
-        if (item) {
             setItems(prev => {
-                const existing = prev.find(i => i.id === id && i.type === type);
+                const existing = prev.find(i => i.id === itemToAdd.id && i.type === type);
                 if (existing) {
-                    return prev.map(i => i.id === id && i.type === type ? { ...i, quantity: i.quantity + quantity } : i);
+                    return prev.map(i => i.id === itemToAdd.id && i.type === type ? { ...i, quantity: i.quantity + quantity } : i);
                 } else {
-                    return [...prev, { id: item.id, name: item.name, price: Number(item.price), quantity, type: type as 'service' | 'product', category: item.category }];
+                    return [...prev, { id: itemToAdd.id, name: itemToAdd.name, price: Number(itemToAdd.price), quantity, type, category: itemToAdd.category }];
                 }
             });
         }
@@ -118,17 +125,6 @@ export function NewServiceForm() {
     ] as const;
 
     const itemsForCategory = getItemsForCategory();
-
-    const getItemType = (itemCategory: string) => {
-        switch(itemCategory) {
-            case 'barberia':
-            case 'nordico':
-            case 'zona gamer':
-                return 'service';
-            default:
-                return 'product';
-        }
-    }
 
     return (
         <div className="space-y-4">
@@ -178,10 +174,10 @@ export function NewServiceForm() {
                         <Select value={selectedItem} onValueChange={setSelectedItem}>
                             <SelectTrigger><SelectValue placeholder="-- Seleccione un item --" /></SelectTrigger>
                             <SelectContent>
-                                {itemsForCategory.length > 0 ? itemsForCategory.map(item => (
+                                {itemsForCategory.length > 0 ? itemsForCategory.map((item, index) => (
                                     <SelectItem
-                                        key={`${selectedCategory}-${item.id}`}
-                                        value={`${getItemType(item.category)}-${item.id}`}
+                                        key={`${item.id}_${index}`}
+                                        value={`${item.id}_${index}`}
                                     >
                                         {item.name} ({formatCurrency(item.price)})
                                     </SelectItem>
