@@ -119,6 +119,17 @@ export function NewServiceForm() {
 
     const itemsForCategory = getItemsForCategory();
 
+    const getItemType = (itemCategory: string) => {
+        switch(itemCategory) {
+            case 'barberia':
+            case 'nordico':
+            case 'zona gamer':
+                return 'service';
+            default:
+                return 'product';
+        }
+    }
+
     return (
         <div className="space-y-4">
             {/* Barber and Customer Selection */}
@@ -170,7 +181,7 @@ export function NewServiceForm() {
                                 {itemsForCategory.length > 0 ? itemsForCategory.map(item => (
                                     <SelectItem
                                         key={`${selectedCategory}-${item.id}`}
-                                        value={`${(item.category === 'barberia' || item.category === 'nordico' || item.category === 'zona gamer') ? 'service' : 'product'}-${item.id}`}
+                                        value={`${getItemType(item.category)}-${item.id}`}
                                     >
                                         {item.name} ({formatCurrency(item.price)})
                                     </SelectItem>
