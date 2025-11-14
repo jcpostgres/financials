@@ -69,7 +69,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const addOrEdit = async (collectionName: string, data: any, id?: string) => {
     const dataToSave = { ...data };
       Object.keys(dataToSave).forEach(key => {
-          if (['price', 'cost', 'stock', 'rentAmount', 'commissionPercentage', 'amount'].includes(key)) {
+          if (['price', 'cost', 'stock', 'rentAmount', 'commissionPercentage', 'amount', 'monthlyPayment'].includes(key)) {
               dataToSave[key] = Number(dataToSave[key] || 0);
           }
       });

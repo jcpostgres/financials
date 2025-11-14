@@ -54,7 +54,7 @@ export default function StaffPage() {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Rol</TableHead>
-                <TableHead>Detalles</TableHead>
+                <TableHead>Detalles de Pago</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -69,6 +69,9 @@ export default function StaffPage() {
                     <TableCell className="text-sm text-muted-foreground">
                       {member.role === 'barber' && (
                         `Alquiler: ${formatCurrency(member.rentAmount)} | Comisión: ${member.commissionPercentage || 0}%`
+                      )}
+                      {(member.role === 'recepcionista' || member.role === 'limpieza') && (
+                        `Pago Mensual: ${formatCurrency(member.monthlyPayment)}`
                       )}
                     </TableCell>
                     <TableCell className="text-right">

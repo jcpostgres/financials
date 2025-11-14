@@ -65,6 +65,12 @@ export function StaffForm({ isEditing, onSave, initialData }: StaffFormProps) {
           </div>
         </>
       )}
+      {(formData.role === 'recepcionista' || formData.role === 'limpieza') && (
+        <div className="space-y-2">
+          <Label htmlFor="monthlyPayment">Pago Mensual ($):</Label>
+          <Input id="monthlyPayment" name="monthlyPayment" type="number" value={formData.monthlyPayment || ''} onChange={handleChange} />
+        </div>
+      )}
       <Button type="submit" className="w-full">{isEditing ? 'Actualizar Personal' : 'Agregar Personal'}</Button>
     </form>
   );

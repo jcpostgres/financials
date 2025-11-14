@@ -17,7 +17,7 @@ export const mockProducts: Product[] = [
 export const mockStaff: Staff[] = [
   { id: 's1', name: 'Erik "El Vikingo"', role: 'barber', rentAmount: 150, commissionPercentage: 50 },
   { id: 's2', name: 'Bjorn "Manos de Hierro"', role: 'barber', rentAmount: 150, commissionPercentage: 50 },
-  { id: 's3', name: 'Astrid', role: 'recepcionista' },
+  { id: 's3', name: 'Astrid', role: 'recepcionista', monthlyPayment: 800 },
 ];
 
 export const mockCustomers: Customer[] = [

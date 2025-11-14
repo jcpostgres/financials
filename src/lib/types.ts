@@ -23,6 +23,7 @@ export interface Staff {
   role: 'barber' | 'recepcionista' | 'limpieza';
   rentAmount?: number;
   commissionPercentage?: number;
+  monthlyPayment?: number;
 }
 
 export interface Customer {
@@ -76,5 +77,3 @@ export interface ActiveTicket {
 export interface AppSettings {
   bcvRate: number;
 }
-
-    
