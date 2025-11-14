@@ -5,6 +5,12 @@ import { useAppState } from '@/hooks/use-app-state';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Plus, Trash2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { formatCurrency } from '@/lib/utils';
+import type { TicketItem } from '@/lib/types';
+import { CustomerForm } from '../customers/customer-form';
 
 export function AddBarberToQueueContent() {
   const { staff, barberTurnQueue, addBarberToQueue } = useAppState();
@@ -39,4 +45,139 @@ export function AddBarberToQueueContent() {
       )}
     </div>
   );
+}
+
+export function NewServiceForm() {
+    const { staff, customers, services, products, barberTurnQueue, startService, openModal, addOrEdit } = useAppState();
+    
+    const [barberId, setBarberId] = useState(barberTurnQueue[0] || '');
+    const [customerId, setCustomerId] = useState('');
+    const [items, setItems] = useState<TicketItem[]>([]);
+    const [selectedItem, setSelectedItem] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    
+    const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const barbers = staff.filter(s => s.role === 'barber');
+
+    const handleAddItem = () => {
+        if (!selectedItem) return;
+        const [type, id] = selectedItem.split('-');
+        const source = type === 'service' ? services : products;
+        const item = source.find(i => i.id === id);
+
+        if (item) {
+            setItems(prev => {
+                const existing = prev.find(i => i.id === id && i.type === type);
+                if (existing) {
+                    return prev.map(i => i.id === id && i.type === type ? { ...i, quantity: i.quantity + quantity } : i);
+                } else {
+                    return [...prev, { id: item.id, name: item.name, price: Number(item.price), quantity, type: type as 'service' | 'product', category: item.category }];
+                }
+            });
+        }
+        setSelectedItem('');
+        setQuantity(1);
+    };
+    
+    const handleRemoveItem = (index: number) => {
+        setItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleStartService = () => {
+        startService(customerId, barberId, items, totalAmount);
+    };
+
+    const openCreateCustomerModal = () => {
+        openModal(
+            <CustomerForm
+                isEditing={false}
+                onSave={(data) => addOrEdit('customers', data)}
+                initialData={{ name: '', dob: '', phone: '' }}
+            />,
+            'Crear Nuevo Cliente'
+        );
+    };
+
+    return (
+        <div className="space-y-4">
+            {/* Barber and Customer Selection */}
+            <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1">
+                    <Label htmlFor="barber">Seleccionar Barbero:</Label>
+                    <Select value={barberId} onValueChange={setBarberId}>
+                        <SelectTrigger id="barber"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            {barbers.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="customer">Seleccionar Cliente:</Label>
+                    <Select value={customerId} onValueChange={setCustomerId}>
+                        <SelectTrigger id="customer"><SelectValue placeholder="-- Seleccione un cliente --" /></SelectTrigger>
+                        <SelectContent>
+                            {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Button variant="link" size="sm" className="p-0 h-auto" onClick={openCreateCustomerModal}>+ Crear Nuevo Cliente</Button>
+                </div>
+            </div>
+
+            <Separator />
+            
+            {/* Add Items */}
+            <div className="space-y-2">
+                <Label>Añadir Servicios/Productos</Label>
+                <div className="flex items-center gap-2">
+                    <Select value={selectedItem} onValueChange={setSelectedItem}>
+                        <SelectTrigger><SelectValue placeholder="-- Seleccione un item --" /></SelectTrigger>
+                        <SelectContent>
+                            <div className="px-2 py-1.5 text-sm font-semibold">Servicios</div>
+                            {services.map(s => <SelectItem key={`s-${s.id}`} value={`service-${s.id}`}>{s.name} ({formatCurrency(s.price)})</SelectItem>)}
+                            <div className="px-2 py-1.5 text-sm font-semibold">Productos</div>
+                            {products.map(p => <SelectItem key={`p-${p.id}`} value={`product-${p.id}`}>{p.name} ({formatCurrency(p.price)})</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                    <Input type="number" value={quantity} onChange={e => setQuantity(Math.max(1, Number(e.target.value)))} className="w-20" aria-label="Cantidad" />
+                    <Button size="icon" onClick={handleAddItem} disabled={!selectedItem}><Plus className="h-4 w-4" /></Button>
+                </div>
+            </div>
+
+            {/* Ticket Items */}
+            <div>
+                <h3 className="text-sm font-medium mb-2">Items en el Ticket:</h3>
+                <div className="space-y-2">
+                    {items.length > 0 ? (
+                        items.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center bg-muted p-2 rounded-md">
+                                <div>
+                                    {item.name} <span className="text-xs text-muted-foreground">x{item.quantity}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span>{formatCurrency(item.price * item.quantity)}</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleRemoveItem(index)}>
+                                        <Trash2 className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-muted-foreground text-center py-2">No hay items añadidos.</p>
+                    )}
+                </div>
+            </div>
+
+            <Separator />
+            
+            {/* Total and Action */}
+            <div className="flex justify-between items-center font-bold text-lg">
+                <span>Total:</span>
+                <span>{formatCurrency(totalAmount)}</span>
+            </div>
+            
+            <Button className="w-full" onClick={handleStartService} disabled={!barberId || !customerId || items.length === 0}>
+                Iniciar Servicio
+            </Button>
+        </div>
+    );
 }

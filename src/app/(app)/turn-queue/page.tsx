@@ -4,8 +4,8 @@ import { useAppState } from '@/hooks/use-app-state';
 import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ListOrdered, UserPlus, Trash2, ChevronsUpDown, CheckSquare } from 'lucide-react';
-import { AddBarberToQueueContent } from './queue-modals';
+import { ListOrdered, UserPlus, Trash2, ChevronsUpDown, CheckSquare, Plus } from 'lucide-react';
+import { AddBarberToQueueContent, NewServiceForm } from './queue-modals';
 import { useToast } from '@/hooks/use-toast';
 
 export default function TurnQueuePage() {
@@ -21,6 +21,14 @@ export default function TurnQueuePage() {
     }
     openModal(<AddBarberToQueueContent />, 'Añadir Barbero a Cola');
   };
+  
+  const openNewServiceModal = () => {
+    if (barberTurnQueue.length === 0) {
+      toast({ title: 'Atención', description: 'No hay barberos en la cola de turnos.', variant: 'destructive'});
+      return;
+    }
+    openModal(<NewServiceForm />, 'Iniciar Nuevo Servicio');
+  };
 
   return (
     <div>
@@ -30,6 +38,12 @@ export default function TurnQueuePage() {
           <Button onClick={openAddBarberToQueueModal}><UserPlus className="mr-2 h-4 w-4" /> Añadir Barbero</Button>
         </div>
       </PageHeader>
+      
+      <div className="mb-6">
+        <Button onClick={openNewServiceModal} size="lg" className="w-full">
+            <Plus className="mr-2 h-5 w-5" /> Nuevo Servicio
+        </Button>
+      </div>
 
       <Card>
         <CardHeader>
