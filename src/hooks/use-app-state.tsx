@@ -31,6 +31,8 @@ interface AppState {
   addBarberToQueue: (barberId: string) => void;
   removeBarberFromQueue: (barberId: string) => void;
   moveBarberInQueue: (barberId: string, direction: 'up' | 'down') => void;
+  rotateBarberInQueue: (barberId: string) => void;
+  clearBarberQueue: () => void;
   // Ticket Logic
   startService: (customerId: string, barberId: string, items: TicketItem[], totalAmount: number) => void;
   addItemToTicket: (ticketId: string, item: Service | Product, type: 'service' | 'product') => void;
@@ -142,6 +144,20 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     setBarberTurnQueue(prev => prev.filter(id => id !== barberId));
     toast({ title: "Éxito", description: 'Barbero removido de la cola.', variant: "default"});
     closeModal();
+  };
+
+  const rotateBarberInQueue = (barberId: string) => {
+    setBarberTurnQueue(prevQueue => {
+      const newQueue = prevQueue.filter(id => id !== barberId);
+      newQueue.push(barberId);
+      return newQueue;
+    });
+    toast({ title: "Turno Finalizado", description: 'El barbero ha sido movido al final de la cola.', variant: "default"});
+  };
+
+  const clearBarberQueue = () => {
+    setBarberTurnQueue([]);
+    toast({ title: "Cola Limpiada", description: 'Se han eliminado todos los barberos de la cola.', variant: "default"});
   };
   
   const moveBarberInQueue = (barberId: string, direction: 'up' | 'down') => {
@@ -261,6 +277,8 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     addBarberToQueue,
     removeBarberFromQueue,
     moveBarberInQueue,
+    rotateBarberInQueue,
+    clearBarberQueue,
     startService,
     addItemToTicket,
     finalizePayment,

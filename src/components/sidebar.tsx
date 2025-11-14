@@ -17,13 +17,14 @@ import {
   Wallet,
   LogOut,
   BrainCircuit,
+  UserCheck,
 } from 'lucide-react';
 import { Button } from './ui/button';
 
 const adminViews = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/turn-queue', label: 'Cola de Turnos', icon: ListOrdered },
-  { href: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
+  { href: '/pos', label: 'Punto de Venta', icon: UserCheck },
   { href: '/inventory', label: 'Inventario', icon: Package },
   { href: '/staff', label: 'Personal', icon: Users },
   { href: '/customers', label: 'Clientes', icon: Scissors },
@@ -35,7 +36,7 @@ const adminViews = [
 
 const receptionistViews = [
   { href: '/turn-queue', label: 'Cola de Turnos', icon: ListOrdered },
-  { href: '/pos', label: 'Punto de Venta', icon: ShoppingCart },
+  { href: '/pos', label: 'Punto de Venta', icon: UserCheck },
   { href: '/cash-register', label: 'Control de Caja', icon: Key },
   { href: '/inventory', label: 'Inventario', icon: Package },
   { href: '/staff', label: 'Personal', icon: Users },
