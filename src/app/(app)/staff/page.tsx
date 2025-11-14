@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { Button } from '@/components/ui/button';
 import { Edit, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/componentsui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Staff } from '@/lib/types';
 import { StaffForm } from './staff-form';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
