@@ -110,5 +110,3 @@ export function ProductForm({ isEditing, onSave, initialData }: FormProps<Produc
     </form>
   );
 }
-
-    

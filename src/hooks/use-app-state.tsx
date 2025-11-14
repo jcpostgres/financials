@@ -79,7 +79,11 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         setter(prev => prev.map(item => item.id === id ? { ...item, ...dataToSave } : item));
         toast({ title: "Éxito", description: 'Elemento actualizado.', variant: "default" });
       } else {
-        setter(prev => [...prev, { ...dataToSave, id: crypto.randomUUID(), createdAt: new Date() }]);
+        const newItem = { ...dataToSave, id: crypto.randomUUID() };
+        if (collectionName !== 'expenses') {
+          newItem.createdAt = new Date();
+        }
+        setter(prev => [...prev, newItem]);
         toast({ title: "Éxito", description: 'Elemento agregado.', variant: "default" });
       }
     };
