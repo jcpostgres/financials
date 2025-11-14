@@ -1,7 +1,7 @@
 'use client';
 
 import { PageHeader } from '@/components/common/page-header';
-import { ServicesTable, ProductsTable } from './inventory-tables';
+import { ServicesTable, ProductsTable, SnacksTable, GamerZoneTable } from './inventory-tables';
 
 export default function InventoryPage() {
   return (
@@ -13,7 +13,11 @@ export default function InventoryPage() {
       <div className="space-y-8">
         <ServicesTable />
         <ProductsTable />
+        <SnacksTable />
+        <GamerZoneTable />
       </div>
     </div>
   );
 }
+
+    

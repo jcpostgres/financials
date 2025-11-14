@@ -4,7 +4,7 @@ export interface Service {
   id: string;
   name: string;
   price: number;
-  category: 'barberia' | 'nordico';
+  category: 'barberia' | 'nordico' | 'zona gamer';
   description: string;
 }
 
@@ -76,3 +76,5 @@ export interface ActiveTicket {
 export interface AppSettings {
   bcvRate: number;
 }
+
+    

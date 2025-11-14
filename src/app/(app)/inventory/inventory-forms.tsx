@@ -27,7 +27,7 @@ export function ServiceForm({ isEditing, onSave, initialData }: FormProps<Servic
   };
   
   const handleSelectChange = (value: string) => {
-    setFormData(prev => ({...prev, category: value as 'barberia' | 'nordico'}));
+    setFormData(prev => ({...prev, category: value as 'barberia' | 'nordico' | 'zona gamer'}));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,6 +52,7 @@ export function ServiceForm({ isEditing, onSave, initialData }: FormProps<Servic
           <SelectContent>
             <SelectItem value="barberia">Barbería</SelectItem>
             <SelectItem value="nordico">Nordico</SelectItem>
+            <SelectItem value="zona gamer">Zona Gamer</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -103,9 +104,11 @@ export function ProductForm({ isEditing, onSave, initialData }: FormProps<Produc
       </div>
       <div className="space-y-2">
         <Label htmlFor="category">Categoría:</Label>
-        <Input id="category" name="category" value={formData.category || ''} onChange={handleChange} placeholder="Ej: Bebida, Snack" required/>
+        <Input id="category" name="category" value={formData.category || ''} onChange={handleChange} placeholder="Ej: Bebida, Cuidado Capilar" required/>
       </div>
       <Button type="submit" className="w-full">{isEditing ? 'Actualizar Producto' : 'Agregar Producto'}</Button>
     </form>
   );
 }
+
+    
