@@ -73,9 +73,7 @@ export function NewServiceForm() {
         if (!selectedItem || !selectedCategory) return;
         const [type, id] = selectedItem.split('-');
         
-        let source;
-        if (type === 'service') source = services;
-        else source = products;
+        const source = (type === 'service') ? services : products;
 
         const item = source.find(i => i.id === id);
 
@@ -172,7 +170,7 @@ export function NewServiceForm() {
                                 {itemsForCategory.length > 0 ? itemsForCategory.map(item => (
                                     <SelectItem
                                         key={`${selectedCategory}-${item.id}`}
-                                        value={`${selectedCategory === 'gamer' || selectedCategory === 'service' ? 'service' : 'product'}-${item.id}`}
+                                        value={`${(item.category === 'barberia' || item.category === 'nordico' || item.category === 'zona gamer') ? 'service' : 'product'}-${item.id}`}
                                     >
                                         {item.name} ({formatCurrency(item.price)})
                                     </SelectItem>
