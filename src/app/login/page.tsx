@@ -3,71 +3,100 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { LogIn } from 'lucide-react';
+import { Building, LogIn, User, UserCog } from 'lucide-react';
 import type { Role } from '@/lib/types';
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [step, setStep] = useState<'location' | 'role'>('location');
+  const [location, setLocation] = useState<'MAGALLANES' | 'SARRIAS' | null>(
+    null
+  );
   const { login } = useAuth();
   const { toast } = useToast();
 
-  const handleLogin = () => {
-    if (username === 'admin@nordico.com' && password === 'admin123') {
-      login('admin' as Role);
-      toast({ title: 'Éxito', description: 'Inicio de sesión como Administrador exitoso.' });
-    } else if (username === 'recepcionista@nordico.com' && password === 'recep123') {
-      login('recepcionista' as Role);
-      toast({ title: 'Éxito', description: 'Inicio de sesión como Recepcionista exitoso.' });
-    } else {
-      toast({ title: 'Error', description: 'Credenciales incorrectas. Intente de nuevo.', variant: 'destructive' });
-    }
+  const handleLocationSelect = (selectedLocation: 'MAGALLANES' | 'SARRIAS') => {
+    setLocation(selectedLocation);
+    setStep('role');
+  };
+
+  const handleRoleSelect = (role: Role) => {
+    login(role);
+    toast({
+      title: 'Éxito',
+      description: `Inicio de sesión como ${
+        role === 'admin' ? 'Administrador' : 'Recepcionista'
+      } en ${location}.`,
+    });
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md animate-fade-in-up border-primary/20 shadow-lg shadow-primary/10">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-primary">Bienvenido a NORDICO POS</CardTitle>
-          <CardDescription>Ingrese sus credenciales para continuar</CardDescription>
+          <CardTitle className="text-3xl font-bold text-primary">
+            Bienvenido a NORDICO POS
+          </CardTitle>
+          <CardDescription>
+            {step === 'location'
+              ? 'Seleccione su sede para continuar'
+              : `Sede ${location}. Seleccione su rol:`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Usuario (Email)</Label>
-              <Input
-                type="email"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="ej: recepcionista@nordico.com"
-                onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
-              />
+          {step === 'location' ? (
+            <div className="space-y-4">
+              <Button
+                onClick={() => handleLocationSelect('MAGALLANES')}
+                className="w-full"
+                size="lg"
+              >
+                <Building className="mr-2 h-5 w-5" />
+                MAGALLANES
+              </Button>
+              <Button
+                onClick={() => handleLocationSelect('SARRIAS')}
+                className="w-full"
+                size="lg"
+              >
+                <Building className="mr-2 h-5 w-5" />
+                SARRIAS
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Contraseña"
-                onKeyUp={(e) => e.key === 'Enter' && handleLogin()}
-              />
+          ) : (
+            <div className="space-y-4">
+              <Button
+                onClick={() => handleRoleSelect('admin' as Role)}
+                className="w-full"
+                size="lg"
+              >
+                <UserCog className="mr-2 h-5 w-5" />
+                Administrador
+              </Button>
+              <Button
+                onClick={() => handleRoleSelect('recepcionista' as Role)}
+                className="w-full"
+                size="lg"
+              >
+                <User className="mr-2 h-5 w-5" />
+                Recepcionista
+              </Button>
+              <Button
+                variant="link"
+                onClick={() => setStep('location')}
+                className="w-full"
+              >
+                Cambiar de sede
+              </Button>
             </div>
-            <Button onClick={handleLogin} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-              <LogIn className="mr-2 h-4 w-4" /> Iniciar Sesión
-            </Button>
-          </div>
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            <p className="font-semibold mb-2">Credenciales de Prueba:</p>
-            <p>Admin: <span className="font-bold text-primary">admin@nordico.com</span> / <span className="font-bold text-primary">admin123</span></p>
-            <p>Recep: <span className="font-bold text-primary">recepcionista@nordico.com</span> / <span className="font-bold text-primary">recep123</span></p>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
