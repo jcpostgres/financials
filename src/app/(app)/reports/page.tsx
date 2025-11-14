@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
-import type { Product } from '@/lib/types';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import type { Product, Transaction } from '@/lib/types';
 
 export default function ReportsPage() {
   const { transactions, expenses, products } = useAppState();
@@ -40,10 +42,18 @@ export default function ReportsPage() {
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   const netProfit = totalIncome - totalExpenses;
 
-  const incomeByPaymentMethod = filteredTransactions.reduce((acc, tx) => {
-    acc[tx.paymentMethod] = (acc[tx.paymentMethod] || 0) + tx.totalAmount;
+  const transactionsByPaymentMethod = filteredTransactions.reduce((acc, tx) => {
+    const method = tx.paymentMethod;
+    if (!acc[method]) {
+      acc[method] = {
+        total: 0,
+        transactions: []
+      };
+    }
+    acc[method].total += tx.totalAmount;
+    acc[method].transactions.push(tx);
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, { total: number; transactions: Transaction[] }>);
 
   const earningsByItem = filteredTransactions
     .flatMap(tx => tx.items)
@@ -112,14 +122,41 @@ export default function ReportsPage() {
         <Card>
           <CardHeader><CardTitle>Ingresos por Método de Pago</CardTitle></CardHeader>
           <CardContent>
-            {Object.keys(incomeByPaymentMethod).length > 0 ? (
-              <ul className="space-y-2">
-                {Object.entries(incomeByPaymentMethod).map(([method, amount]) => (
-                  <li key={method} className="flex justify-between items-center bg-muted p-3 rounded-md">
-                    <span className="font-semibold">{method}</span><span>{formatCurrency(amount)}</span>
-                  </li>
+            {Object.keys(transactionsByPaymentMethod).length > 0 ? (
+              <Accordion type="single" collapsible className="w-full">
+                {Object.entries(transactionsByPaymentMethod).map(([method, data]) => (
+                  <AccordionItem value={method} key={method}>
+                    <AccordionTrigger>
+                      <div className="flex justify-between w-full pr-4">
+                        <span className="font-semibold">{method}</span>
+                        <span>{formatCurrency(data.total)}</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Fecha</TableHead>
+                            <TableHead>Items</TableHead>
+                            <TableHead>Monto</TableHead>
+                            {method === 'Pago Móvil' && <TableHead>Referencia</TableHead>}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {data.transactions.map(tx => (
+                            <TableRow key={tx.id}>
+                              <TableCell>{tx.endTime.toLocaleString()}</TableCell>
+                              <TableCell>{tx.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</TableCell>
+                              <TableCell>{formatCurrency(tx.totalAmount)}</TableCell>
+                              {method === 'Pago Móvil' && <TableCell>{tx.referenceNumber}</TableCell>}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
-              </ul>
+              </Accordion>
             ) : <p className="text-muted-foreground text-center">No hay datos para el período.</p>}
           </CardContent>
         </Card>
