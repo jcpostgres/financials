@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
+import type { Product } from '@/lib/types';
 
 export default function ReportsPage() {
-  const { transactions, expenses } = useAppState();
+  const { transactions, expenses, products } = useAppState();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -42,6 +44,26 @@ export default function ReportsPage() {
     acc[tx.paymentMethod] = (acc[tx.paymentMethod] || 0) + tx.totalAmount;
     return acc;
   }, {} as Record<string, number>);
+
+  const earningsByItem = filteredTransactions
+    .flatMap(tx => tx.items)
+    .reduce((acc, item) => {
+      const productDetails = products.find(p => p.id === item.id);
+      const cost = item.type === 'product' && productDetails ? productDetails.cost : 0;
+      
+      if (!acc[item.id]) {
+        acc[item.id] = { name: item.name, quantity: 0, revenue: 0, cost: 0 };
+      }
+      
+      acc[item.id].quantity += item.quantity;
+      acc[item.id].revenue += item.price * item.quantity;
+      acc[item.id].cost += cost * item.quantity;
+
+      return acc;
+    }, {} as Record<string, { name: string; quantity: number; revenue: number; cost: number }>);
+  
+  const earningsByItemList = Object.values(earningsByItem).sort((a, b) => b.revenue - a.revenue);
+
 
   const setFilterPreset = (preset: 'today' | 'month' | 'year') => {
     const today = new Date();
@@ -86,7 +108,7 @@ export default function ReportsPage() {
         <Card><CardHeader><CardTitle>Ganancia Neta</CardTitle></CardHeader><CardContent className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatCurrency(netProfit)}</CardContent></Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="space-y-6">
         <Card>
           <CardHeader><CardTitle>Ingresos por Método de Pago</CardTitle></CardHeader>
           <CardContent>
@@ -101,6 +123,41 @@ export default function ReportsPage() {
             ) : <p className="text-muted-foreground text-center">No hay datos para el período.</p>}
           </CardContent>
         </Card>
+        
+        <Card>
+          <CardHeader><CardTitle>Ganancias por Item</CardTitle></CardHeader>
+          <CardContent className="p-0">
+             <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Item</TableHead>
+                  <TableHead className="text-center">Cant. Vendida</TableHead>
+                  <TableHead className="text-right">Ingresos</TableHead>
+                  <TableHead className="text-right">Costo Total</TableHead>
+                  <TableHead className="text-right">Ganancia Neta</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {earningsByItemList.length > 0 ? (
+                  earningsByItemList.map(item => (
+                    <TableRow key={item.name}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-center">{item.quantity}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.revenue)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
+                      <TableCell className="text-right font-bold text-green-400">{formatCurrency(item.revenue - item.cost)}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">No hay ventas de items en el período seleccionado.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader><CardTitle>Ganancias de Socios</CardTitle></CardHeader>
           <CardContent><p className="text-muted-foreground text-center">Cálculo de ganancias de socios (en desarrollo).</p></CardContent>
