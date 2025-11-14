@@ -12,6 +12,7 @@ export const mockProducts: Product[] = [
   { id: 'p2', name: 'Aceite para Barba', price: 15, cost: 7, stock: 40, category: 'Cuidado de Barba' },
   { id: 'p3', name: 'Refresco', price: 2, cost: 1, stock: 100, category: 'Bebidas' },
   { id: 'p4', name: 'Bebida de Cortesía', price: 0, cost: 0, stock: 9999, category: 'Cortesía' },
+  { id: 'p5', name: 'Snack de Cortesía', price: 0, cost: 0, stock: 9999, category: 'Snack de Cortesía' },
 ];
 
 export const mockStaff: Staff[] = [

@@ -64,7 +64,7 @@ export function NewServiceForm() {
 
     const getItemsForCategory = () => {
         if (selectedCategory === 'service') return services.filter(s => s.category === 'barberia' || s.category === 'nordico');
-        if (selectedCategory === 'product') return products.filter(p => p.category !== 'Snack' && p.category !== 'Cortesía');
+        if (selectedCategory === 'product') return products.filter(p => p.category !== 'Snack' && p.category !== 'Cortesía' && p.category !== 'Snack de Cortesía');
         if (selectedCategory === 'snack') return products.filter(p => p.category === 'Snack');
         if (selectedCategory === 'gamer') return services.filter(s => s.category === 'zona gamer');
         return [];
@@ -100,10 +100,11 @@ export function NewServiceForm() {
         setQuantity(1);
     };
 
-    const handleAddCourtesySnack = () => {
-        const courtesyItem = products.find(p => p.category === 'Cortesía' && p.price === 0);
+    const handleAddCourtesySnack = (courtesyType: 'Bebida' | 'Snack') => {
+        const category = courtesyType === 'Bebida' ? 'Cortesía' : 'Snack de Cortesía';
+        const courtesyItem = products.find(p => p.category === category && p.price === 0);
         if (!courtesyItem) {
-            toast({ title: "Error", description: "No se encontró un item de cortesía configurado.", variant: "destructive" });
+            toast({ title: "Error", description: `No se encontró un item de ${category} configurado.`, variant: "destructive" });
             return;
         }
 
@@ -120,7 +121,7 @@ export function NewServiceForm() {
                 price: 0,
                 quantity: 1,
                 type: 'product',
-                category: 'Cortesía'
+                category: category
             }];
         });
     };
@@ -195,9 +196,12 @@ export function NewServiceForm() {
                         </Button>
                     ))}
                 </div>
-                <div className="flex justify-center">
-                    <Button variant="outline" onClick={handleAddCourtesySnack} className="w-1/2">
-                        <Gift className="mr-2 h-4 w-4 text-accent" /> Cortesía
+                 <div className="flex justify-center gap-2">
+                    <Button variant="outline" onClick={() => handleAddCourtesySnack('Bebida')} className="flex-1">
+                        <Gift className="mr-2 h-4 w-4 text-accent" /> Cortesía (Bebida)
+                    </Button>
+                     <Button variant="outline" onClick={() => handleAddCourtesySnack('Snack')} className="flex-1">
+                        <Gift className="mr-2 h-4 w-4 text-accent" /> Cortesía (Snack)
                     </Button>
                 </div>
 
@@ -260,5 +264,3 @@ export function NewServiceForm() {
         </div>
     );
 }
-
-    

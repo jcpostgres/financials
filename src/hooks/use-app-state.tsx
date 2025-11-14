@@ -234,7 +234,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
 
     // Update stock
     ticket.items.forEach(item => {
-      if (item.type === 'product' && item.category !== 'Cortesía') {
+      if (item.type === 'product' && item.category !== 'Cortesía' && item.category !== 'Snack de Cortesía') {
         setProducts(prev => prev.map(p => 
           p.id === item.id ? { ...p, stock: p.stock - item.quantity } : p
         ));
@@ -300,5 +300,3 @@ export const useAppState = () => {
   }
   return context;
 };
-
-    
