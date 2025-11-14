@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Sidebar } from '@/components/sidebar';
+import { ModalProvider } from '@/components/modal-provider';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, isLoading } = useAuth();
@@ -29,6 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-grow p-4 md:p-6 overflow-auto">
         {children}
       </main>
+      <ModalProvider />
     </div>
   );
 }
