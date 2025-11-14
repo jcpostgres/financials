@@ -1,16 +1,18 @@
 'use client';
 
-import type { ActiveTicket } from '@/lib/types';
+import type { ActiveTicket, Service, Product, TicketItem } from '@/lib/types';
 import { useAppState } from '@/hooks/use-app-state';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState }from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Package, Scissors, Sandwich, Gamepad2, Plus } from 'lucide-react';
 
 interface ActiveTicketCardProps {
   ticket: ActiveTicket;
@@ -19,20 +21,51 @@ interface ActiveTicketCardProps {
 function FinalizePaymentContent({ ticket }: { ticket: ActiveTicket }) {
     const { finalizePayment } = useAppState();
     const [paymentMethod, setPaymentMethod] = useState('');
+    const [referenceNumber, setReferenceNumber] = useState('');
+    const { toast } = useToast();
+
+    const handleFinalize = () => {
+        if (paymentMethod === 'Pago Móvil' && referenceNumber.length < 4) {
+            toast({
+                title: 'Error de Validación',
+                description: 'El número de referencia debe tener al menos 4 dígitos.',
+                variant: 'destructive',
+            });
+            return;
+        }
+        finalizePayment(ticket, paymentMethod, referenceNumber);
+    };
 
     return (
         <div className="space-y-4">
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger><SelectValue placeholder="-- Seleccione Método de Pago --" /></SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="Efectivo BS">Efectivo BS</SelectItem>
-                    <SelectItem value="Efectivo USD">Efectivo USD</SelectItem>
-                    <SelectItem value="Tarjeta">Tarjeta</SelectItem>
-                    <SelectItem value="Transferencia">Transferencia</SelectItem>
-                    <SelectItem value="Pago Móvil">Pago Móvil</SelectItem>
-                </SelectContent>
-            </Select>
-            <Button onClick={() => finalizePayment(ticket, paymentMethod)} className="w-full" disabled={!paymentMethod}>
+            <div className="space-y-2">
+                <Label>Método de Pago</Label>
+                <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <SelectTrigger><SelectValue placeholder="-- Seleccione Método de Pago --" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Efectivo BS">Efectivo BS</SelectItem>
+                        <SelectItem value="Efectivo USD">Efectivo USD</SelectItem>
+                        <SelectItem value="Tarjeta">Tarjeta</SelectItem>
+                        <SelectItem value="Transferencia">Transferencia</SelectItem>
+                        <SelectItem value="Pago Móvil">Pago Móvil</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {paymentMethod === 'Pago Móvil' && (
+                <div className="space-y-2 animate-fade-in-up">
+                    <Label htmlFor="referenceNumber">Número de Referencia</Label>
+                    <Input 
+                        id="referenceNumber" 
+                        value={referenceNumber}
+                        onChange={(e) => setReferenceNumber(e.target.value)}
+                        placeholder="Mínimo 4 dígitos"
+                        minLength={4}
+                    />
+                </div>
+            )}
+
+            <Button onClick={handleFinalize} className="w-full" disabled={!paymentMethod}>
                 Confirmar y Registrar Venta
             </Button>
         </div>
@@ -43,30 +76,83 @@ function AddItemContent({ ticket }: { ticket: ActiveTicket }) {
     const { services, products, addItemToTicket } = useAppState();
     const { toast } = useToast();
     const [selectedItem, setSelectedItem] = useState('');
+    const [quantity, setQuantity] = useState(1);
+    const [selectedCategory, setSelectedCategory] = useState<'service' | 'product' | 'snack' | 'gamer' | null>(null);
+
+    const getItemsForCategory = () => {
+        if (selectedCategory === 'service') return services.filter(s => s.category === 'barberia' || s.category === 'nordico');
+        if (selectedCategory === 'product') return products.filter(p => p.category !== 'Snack');
+        if (selectedCategory === 'snack') return products.filter(p => p.category === 'Snack');
+        if (selectedCategory === 'gamer') return services.filter(s => s.category === 'zona gamer');
+        return [];
+    };
+    
+    const getItemTypeFromCategory = (category: string): 'service' | 'product' => {
+        if (['barberia', 'nordico', 'zona gamer'].includes(category)) {
+            return 'service';
+        }
+        return 'product';
+    };
 
     const handleAddItem = () => {
         if (!selectedItem) {
             toast({ title: 'Error', description: 'Por favor, seleccione un item.', variant: 'destructive' });
             return;
         }
-        const [type, id] = selectedItem.split('-');
-        const itemSource = type === 'service' ? services : products;
-        const item = itemSource.find(i => i.id === id);
+        const [itemId] = selectedItem.split('_');
+        const categoryItems = getItemsForCategory();
+        const item = categoryItems.find(i => i.id === itemId);
+
         if (item) {
-            addItemToTicket(ticket.id, item, type as 'service' | 'product');
+            const itemType = getItemTypeFromCategory(item.category as string);
+            addItemToTicket(ticket.id, item, itemType);
         }
+        setSelectedItem('');
     };
+
+    const categoryButtons = [
+        { name: 'Servicio', value: 'service', icon: Scissors },
+        { name: 'Producto', value: 'product', icon: Package },
+        { name: 'Snack', value: 'snack', icon: Sandwich },
+        { name: 'Zona Gamer', value: 'gamer', icon: Gamepad2 }
+    ] as const;
+
+    const itemsForCategory = getItemsForCategory();
     
     return (
          <div className="space-y-4">
-            <Select value={selectedItem} onValueChange={setSelectedItem}>
-                <SelectTrigger><SelectValue placeholder="-- Seleccione un item --" /></SelectTrigger>
-                <SelectContent>
-                    <SelectGroup><div className="px-2 py-1.5 text-sm font-semibold">Servicios</div>{services.map(s => <SelectItem key={`s-${s.id}`} value={`service-${s.id}`}>{s.name} ({formatCurrency(s.price)})</SelectItem>)}</SelectGroup>
-                    <SelectGroup><div className="px-2 py-1.5 text-sm font-semibold">Productos</div>{products.map(p => <SelectItem key={`p-${p.id}`} value={`product-${p.id}`}>{p.name} ({formatCurrency(p.price)})</SelectItem>)}</SelectGroup>
-                </SelectContent>
-            </Select>
-            <Button onClick={handleAddItem} className="w-full" disabled={!selectedItem}>Añadir Item</Button>
+            <Label>Añadir Items</Label>
+            <div className="grid grid-cols-2 gap-2">
+                {categoryButtons.map(cat => (
+                    <Button
+                        key={cat.value}
+                        variant={selectedCategory === cat.value ? 'default' : 'outline'}
+                        onClick={() => {setSelectedCategory(cat.value); setSelectedItem('');}}
+                    >
+                        <cat.icon className="mr-2 h-4 w-4" />
+                        {cat.name}
+                    </Button>
+                ))}
+            </div>
+
+            {selectedCategory && (
+                <div className="flex items-center gap-2 animate-fade-in-up">
+                    <Select value={selectedItem} onValueChange={setSelectedItem}>
+                        <SelectTrigger><SelectValue placeholder="-- Seleccione un item --" /></SelectTrigger>
+                        <SelectContent>
+                            {itemsForCategory.length > 0 ? itemsForCategory.map((item, index) => (
+                                <SelectItem
+                                    key={`${item.id}_${index}`}
+                                    value={`${item.id}_${index}`}
+                                >
+                                    {item.name} ({formatCurrency(item.price)})
+                                </SelectItem>
+                            )) : <div className="p-2 text-center text-sm text-muted-foreground">No hay items.</div>}
+                        </SelectContent>
+                    </Select>
+                    <Button size="icon" onClick={handleAddItem} disabled={!selectedItem}><Plus className="h-4 w-4" /></Button>
+                </div>
+            )}
         </div>
     )
 }

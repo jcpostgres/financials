@@ -45,6 +45,7 @@ export interface Transaction {
   startTime: Date;
   endTime: Date;
   recordedBy?: string | null;
+  referenceNumber?: string;
 }
 
 export interface Expense {

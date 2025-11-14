@@ -36,7 +36,7 @@ interface AppState {
   // Ticket Logic
   startService: (customerId: string, barberId: string, items: TicketItem[], totalAmount: number) => void;
   addItemToTicket: (ticketId: string, item: Service | Product, type: 'service' | 'product') => void;
-  finalizePayment: (ticket: ActiveTicket, paymentMethod: string) => void;
+  finalizePayment: (ticket: ActiveTicket, paymentMethod: string, referenceNumber?: string) => void;
   // Settings
   updateBcvRate: (rate: number) => void;
 }
@@ -215,7 +215,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       closeModal();
   };
 
-  const finalizePayment = (ticket: ActiveTicket, paymentMethod: string) => {
+  const finalizePayment = (ticket: ActiveTicket, paymentMethod: string, referenceNumber?: string) => {
     if (!paymentMethod) {
       toast({ title: "Error", description: 'Seleccione un método de pago.', variant: "destructive"});
       return;
@@ -225,6 +225,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       id: crypto.randomUUID(),
       status: 'completed',
       paymentMethod,
+      referenceNumber,
       endTime: new Date(),
       recordedBy: 'user-id-placeholder'
     };
