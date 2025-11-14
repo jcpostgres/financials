@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Scissors, Package, Sandwich, Gamepad2 } from 'lucide-react';
+import { Plus, Trash2, Scissors, Package, Sandwich, Gamepad2, Gift } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
 import type { TicketItem } from '@/lib/types';
 import { CustomerForm } from '../customers/customer-form';
+import { useToast } from '@/hooks/use-toast';
 
 export function AddBarberToQueueContent() {
   const { staff, barberTurnQueue, addBarberToQueue } = useAppState();
@@ -49,6 +50,7 @@ export function AddBarberToQueueContent() {
 
 export function NewServiceForm() {
     const { staff, customers, services, products, barberTurnQueue, startService, openModal, addOrEdit } = useAppState();
+    const { toast } = useToast();
     
     const [barberId, setBarberId] = useState(barberTurnQueue[0] || '');
     const [customerId, setCustomerId] = useState('');
@@ -62,13 +64,13 @@ export function NewServiceForm() {
 
     const getItemsForCategory = () => {
         if (selectedCategory === 'service') return services.filter(s => s.category === 'barberia' || s.category === 'nordico');
-        if (selectedCategory === 'product') return products.filter(p => p.category !== 'Snack');
+        if (selectedCategory === 'product') return products.filter(p => p.category !== 'Snack' && p.category !== 'Cortesía');
         if (selectedCategory === 'snack') return products.filter(p => p.category === 'Snack');
         if (selectedCategory === 'gamer') return services.filter(s => s.category === 'zona gamer');
         return [];
     };
 
-    const getItemTypeAndSource = (item: { category: string }): { type: 'service' | 'product', source: (typeof services | typeof products) } => {
+    const getItemTypeAndSource = (item: { category?: string }): { type: 'service' | 'product', source: (typeof services | typeof products) } => {
         if (item.category === 'barberia' || item.category === 'nordico' || item.category === 'zona gamer') {
             return { type: 'service', source: services };
         }
@@ -78,7 +80,7 @@ export function NewServiceForm() {
     const handleAddItem = () => {
         if (!selectedItem || !selectedCategory) return;
         
-        const [itemId] = selectedItem.split('_'); // Use only ID, category is for display
+        const [itemId] = selectedItem.split('_');
         const categoryItems = getItemsForCategory();
         const itemToAdd = categoryItems.find(i => i.id === itemId);
 
@@ -96,6 +98,31 @@ export function NewServiceForm() {
         }
         setSelectedItem('');
         setQuantity(1);
+    };
+
+    const handleAddCourtesySnack = () => {
+        const courtesyItem = products.find(p => p.category === 'Cortesía' && p.price === 0);
+        if (!courtesyItem) {
+            toast({ title: "Error", description: "No se encontró un item de cortesía configurado.", variant: "destructive" });
+            return;
+        }
+
+        setItems(prev => {
+            const existing = prev.find(i => i.id === courtesyItem.id);
+            if (existing) {
+                toast({ title: "Información", description: "El item de cortesía ya fue añadido." });
+                return prev;
+            }
+            toast({ title: "Éxito", description: `${courtesyItem.name} añadido.` });
+            return [...prev, {
+                id: courtesyItem.id,
+                name: courtesyItem.name,
+                price: 0,
+                quantity: 1,
+                type: 'product',
+                category: 'Cortesía'
+            }];
+        });
     };
     
     const handleRemoveItem = (index: number) => {
@@ -168,6 +195,11 @@ export function NewServiceForm() {
                         </Button>
                     ))}
                 </div>
+                <div className="flex justify-center">
+                    <Button variant="outline" onClick={handleAddCourtesySnack} className="w-1/2">
+                        <Gift className="mr-2 h-4 w-4 text-accent" /> Cortesía
+                    </Button>
+                </div>
 
                 {selectedCategory && (
                     <div className="flex items-center gap-2 animate-fade-in-up">
@@ -228,3 +260,5 @@ export function NewServiceForm() {
         </div>
     );
 }
+
+    
