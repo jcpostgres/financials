@@ -30,6 +30,7 @@ export interface Customer {
   id: string;
   name: string;
   dob?: string;
+  phone?: string;
   createdAt: Date;
 }
 

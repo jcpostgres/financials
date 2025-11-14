@@ -51,6 +51,7 @@ export default function CustomersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
+                <TableHead>Teléfono</TableHead>
                 <TableHead>F. Nacimiento</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -60,6 +61,7 @@ export default function CustomersPage() {
                 customers.map(c => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell>{c.phone || 'N/A'}</TableCell>
                     <TableCell>{c.dob || 'N/A'}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => openCustomerModal(c)}>
@@ -73,7 +75,7 @@ export default function CustomersPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center">No hay clientes registrados.</TableCell>
+                  <TableCell colSpan={4} className="text-center">No hay clientes registrados.</TableCell>
                 </TableRow>
               )}
             </TableBody>

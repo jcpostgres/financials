@@ -16,7 +16,7 @@ export function CustomerForm({ isEditing, onSave, initialData }: CustomerFormPro
   const [formData, setFormData] = useState(initialData || {});
 
   useEffect(() => {
-    setFormData(initialData || { name: '', dob: '' });
+    setFormData(initialData || { name: '', dob: '', phone: '' });
   }, [initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +49,16 @@ export function CustomerForm({ isEditing, onSave, initialData }: CustomerFormPro
           id="dob"
           name="dob"
           value={formData.dob || ''}
+          onChange={handleChange}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">Teléfono (Opcional):</Label>
+        <Input
+          type="tel"
+          id="phone"
+          name="phone"
+          value={formData.phone || ''}
           onChange={handleChange}
         />
       </div>

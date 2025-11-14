@@ -21,6 +21,6 @@ export const mockStaff: Staff[] = [
 ];
 
 export const mockCustomers: Customer[] = [
-  { id: 'c1', name: 'Juan Pérez', dob: '1990-05-15', createdAt: new Date('2023-01-20T10:00:00Z') },
-  { id: 'c2', name: 'Carlos González', dob: '1985-11-22', createdAt: new Date() },
+  { id: 'c1', name: 'Juan Pérez', dob: '1990-05-15', phone: '555-1234', createdAt: new Date('2023-01-20T10:00:00Z') },
+  { id: 'c2', name: 'Carlos González', dob: '1985-11-22', phone: '555-5678', createdAt: new Date() },
 ];
