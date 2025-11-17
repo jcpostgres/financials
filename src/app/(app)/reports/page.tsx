@@ -13,11 +13,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import type { Transaction } from '@/lib/types';
 import { BarberReports } from './barber-reports';
 
+type IncomeCategory = 'Servicios' | 'Productos' | 'Snacks' | 'Zona Gamer';
+
 export default function ReportsPage() {
   const { transactions, expenses, products, staff } = useAppState();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [activeTab, setActiveTab] = useState<'income' | 'barbers'>('income');
+  const [activeTab, setActiveTab] = useState<'income' | 'barbers' | 'categories'>('income');
 
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate && !endDate) return true;
@@ -75,6 +77,29 @@ export default function ReportsPage() {
   
   const earningsByItemList = Object.values(earningsByItem).sort((a, b) => b.revenue - a.revenue);
 
+  const incomeByCategories = filteredTransactions
+    .flatMap(tx => tx.items)
+    .reduce((acc, item) => {
+      let category: IncomeCategory | null = null;
+      if (item.category === 'barberia' || item.category === 'nordico') {
+        category = 'Servicios';
+      } else if (item.category === 'zona gamer') {
+        category = 'Zona Gamer';
+      } else if (item.category === 'Snack') {
+        category = 'Snacks';
+      } else if (item.type === 'product' && item.category !== 'Cortesía' && item.category !== 'Snack de Cortesía') {
+        category = 'Productos';
+      }
+
+      if (category) {
+        acc[category] = (acc[category] || 0) + (item.price * item.quantity);
+      }
+      
+      return acc;
+    }, {} as Record<IncomeCategory, number>);
+    
+  const totalCategoryIncome = Object.values(incomeByCategories).reduce((sum, amount) => sum + amount, 0);
+
 
   const setFilterPreset = (preset: 'today' | 'month' | 'year') => {
     const today = new Date();
@@ -100,6 +125,7 @@ export default function ReportsPage() {
       <div className="flex gap-2 mb-4">
         <Button variant={activeTab === 'income' ? 'default' : 'outline'} onClick={() => setActiveTab('income')}>Ingresos</Button>
         <Button variant={activeTab === 'barbers' ? 'default' : 'outline'} onClick={() => setActiveTab('barbers')}>Barberos</Button>
+        <Button variant={activeTab === 'categories' ? 'default' : 'outline'} onClick={() => setActiveTab('categories')}>Categorías</Button>
       </div>
       
       <Card className="mb-6">
@@ -212,6 +238,42 @@ export default function ReportsPage() {
       {activeTab === 'barbers' && (
         <div className="animate-fade-in-up">
            <BarberReports transactions={filteredTransactions} staff={staff} />
+        </div>
+      )}
+
+      {activeTab === 'categories' && (
+        <div className="animate-fade-in-up">
+          <Card>
+            <CardHeader><CardTitle>Ingresos por Categoría</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead className="text-right">Ingresos</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(Object.keys(incomeByCategories) as IncomeCategory[]).length > 0 ? (
+                    (Object.keys(incomeByCategories) as IncomeCategory[]).sort().map(category => (
+                      <TableRow key={category}>
+                        <TableCell className="font-semibold">{category}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(incomeByCategories[category])}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow><TableCell colSpan={2} className="text-center">No hay ingresos por categoría.</TableCell></TableRow>
+                  )}
+                </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableHead className="font-bold">Total</TableHead>
+                    <TableHead className="text-right font-bold">{formatCurrency(totalCategoryIncome)}</TableHead>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
