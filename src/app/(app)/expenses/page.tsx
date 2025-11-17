@@ -12,10 +12,14 @@ import { ExpenseForm } from './expense-form';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function ExpensesPage() {
   const { expenses, staff, openModal, addOrEdit, handleDelete: deleteExpense } = useAppState();
   const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const openExpenseModal = (expense: Expense | null = null) => {
     openModal(
@@ -52,8 +56,35 @@ export default function ExpensesPage() {
     }
   };
 
-  const employeeCredits = expenses.filter(e => e.category === 'Crédito a Empleado').sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
-  const otherExpenses = expenses.filter(e => e.category !== 'Crédito a Empleado').sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
+  const setFilterPreset = (preset: 'today' | 'month' | 'year') => {
+    const today = new Date();
+    let start, end;
+    if (preset === 'today') {
+      start = today;
+      end = today;
+    } else if (preset === 'month') {
+      start = new Date(today.getFullYear(), today.getMonth(), 1);
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    } else { // year
+      start = new Date(today.getFullYear(), 0, 1);
+      end = new Date(today.getFullYear(), 11, 31);
+    }
+    setStartDate(start.toISOString().split('T')[0]);
+    setEndDate(end.toISOString().split('T')[0]);
+  };
+
+  const filteredExpenses = expenses.filter(exp => {
+    if (!startDate && !endDate) return true;
+    const expDate = exp.timestamp;
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
+    if (start && expDate < start) return false;
+    if (end && expDate > end) return false;
+    return true;
+  }).sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  const employeeCredits = filteredExpenses.filter(e => e.category === 'Crédito a Empleado');
+  const otherExpenses = filteredExpenses.filter(e => e.category !== 'Crédito a Empleado');
 
   return (
     <>
@@ -65,6 +96,23 @@ export default function ExpensesPage() {
           <Plus className="mr-2 h-4 w-4" /> Registrar Gasto
         </Button>
       </PageHeader>
+
+      <Card className="mb-6">
+        <CardHeader><CardTitle>Filtro por Fecha</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><Label>Fecha Inicio:</Label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
+            <div><Label>Fecha Fin:</Label><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setFilterPreset('today')}>Hoy</Button>
+            <Button variant="outline" onClick={() => setFilterPreset('month')}>Este Mes</Button>
+            <Button variant="outline" onClick={() => setFilterPreset('year')}>Este Año</Button>
+            <Button variant="destructive" onClick={() => { setStartDate(''); setEndDate(''); }}>Limpiar</Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="space-y-8">
         <Card>
           <CardHeader><CardTitle>Gastos Generales</CardTitle></CardHeader>
@@ -92,7 +140,7 @@ export default function ExpensesPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                )) : <TableRow><TableCell colSpan={5} className="text-center">No hay gastos generales registrados.</TableCell></TableRow>}
+                )) : <TableRow><TableCell colSpan={5} className="text-center">No hay gastos generales para el período seleccionado.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>
@@ -122,7 +170,7 @@ export default function ExpensesPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                )) : <TableRow><TableCell colSpan={4} className="text-center">No hay créditos a empleados registrados.</TableCell></TableRow>}
+                )) : <TableRow><TableCell colSpan={4} className="text-center">No hay créditos a empleados para el período seleccionado.</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>

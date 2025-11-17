@@ -19,7 +19,8 @@ import {
   BrainCircuit,
   UserCheck,
   ClipboardList,
-  DollarSign
+  DollarSign,
+  TrendingUp,
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -32,7 +33,7 @@ const adminViews = [
   { href: '/staff', label: 'Personal', icon: Users, group: 'Gestión' },
   { href: '/customers', label: 'Clientes', icon: Scissors, group: 'Gestión' },
   { href: '/expenses', label: 'Gastos', icon: Wallet, group: 'Finanzas' },
-  { href: '/reports', label: 'Reportes', icon: BarChart, group: 'Finanzas' },
+  { href: '/reports', label: 'Ingresos', icon: TrendingUp, group: 'Finanzas' },
   { href: '/forecast', label: 'Previsión IA', icon: BrainCircuit, group: 'Finanzas' },
   { href: '/cash-register', label: 'Control de Caja', icon: Key, group: 'Finanzas' },
 ];

@@ -95,7 +95,7 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reportes Financieros" description="Analiza el rendimiento financiero de tu negocio." />
+      <PageHeader title="Reporte de Ingresos" description="Analiza el rendimiento financiero de tu negocio." />
 
       <div className="flex gap-2 mb-4">
         <Button variant={activeTab === 'income' ? 'default' : 'outline'} onClick={() => setActiveTab('income')}>Ingresos</Button>
