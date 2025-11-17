@@ -11,7 +11,7 @@ export default function PosPage() {
   return (
     <div>
       <PageHeader
-        title="Punto de Venta"
+        title="Cobro de Ventas"
         description="Gestiona los servicios que se están realizando actualmente."
       />
       <div className="space-y-4">
