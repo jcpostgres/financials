@@ -17,8 +17,8 @@ export function ModalProvider() {
 
   return (
     <Dialog open={modal.isOpen} onOpenChange={closeModal}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="p-0">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle>{modal.title}</DialogTitle>
         </DialogHeader>
         {modal.content}
