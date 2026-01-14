@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -16,15 +17,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import type { Transaction } from '@/lib/types';
 
 
-function PaymentMethodTransactionsDialog({ method, amount, transactions }: { method: string, amount: number, transactions: Transaction[] }) {
+function PaymentMethodTransactionsDialog({ method, amount, transactions, bcvRate }: { method: string, amount: number, transactions: Transaction[], bcvRate: number }) {
   const methodTransactions = transactions.filter(tx => tx.paymentMethod === method);
+  const showBs = ['Tarjeta', 'Pago Móvil', 'Efectivo BS', 'Transferencia'].includes(method);
+  const amountInBs = amount * bcvRate;
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full justify-between h-auto py-3">
           <span className="font-semibold">{method}</span>
-          <span className="text-primary font-bold">{formatCurrency(amount)}</span>
+          <div className="text-right">
+            <span className="text-primary font-bold block">{formatCurrency(amount)}</span>
+            {showBs && <span className="text-xs text-muted-foreground">Bs. {amountInBs.toFixed(2)}</span>}
+          </div>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
@@ -37,7 +43,8 @@ function PaymentMethodTransactionsDialog({ method, amount, transactions }: { met
               <TableRow>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Items</TableHead>
-                <TableHead>Monto</TableHead>
+                <TableHead>Monto (USD)</TableHead>
+                {showBs && <TableHead>Monto (Bs.)</TableHead>}
                 {method === 'Pago Móvil' && <TableHead>Referencia</TableHead>}
               </TableRow>
             </TableHeader>
@@ -47,11 +54,12 @@ function PaymentMethodTransactionsDialog({ method, amount, transactions }: { met
                   <TableCell>{tx.endTime.toLocaleString()}</TableCell>
                   <TableCell>{tx.items.map(i => i.name).join(', ')}</TableCell>
                   <TableCell>{formatCurrency(tx.totalAmount)}</TableCell>
+                  {showBs && <TableCell>{(tx.totalAmount * bcvRate).toFixed(2)}</TableCell>}
                   {method === 'Pago Móvil' && <TableCell>{tx.referenceNumber}</TableCell>}
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={method === 'Pago Móvil' ? 4 : 3} className="text-center">
+                  <TableCell colSpan={showBs ? (method === 'Pago Móvil' ? 5 : 4) : 3} className="text-center">
                     No hay transacciones para este método.
                   </TableCell>
                 </TableRow>
@@ -66,7 +74,7 @@ function PaymentMethodTransactionsDialog({ method, amount, transactions }: { met
 
 
 export default function CashRegisterPage() {
-  const { transactions, expenses, customers } = useAppState();
+  const { transactions, expenses, customers, appSettings } = useAppState();
   const { toast } = useToast();
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
@@ -183,6 +191,7 @@ export default function CashRegisterPage() {
                     method={method}
                     amount={amount}
                     transactions={filteredTransactions}
+                    bcvRate={appSettings.bcvRate}
                   />
                 ))}
               </div>
@@ -236,4 +245,5 @@ export default function CashRegisterPage() {
       </Card>
     </div>
   );
-}
+
+    
