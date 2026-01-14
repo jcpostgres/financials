@@ -42,7 +42,7 @@ export default function LoginScreen() {
       <Card className="w-full max-w-md animate-fade-in-up border-primary/20 shadow-lg shadow-primary/10">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-primary">
-            Bienvenido a NORDICO POS
+            NORDICO POS
           </CardTitle>
           <CardDescription>
             {step === 'location'
