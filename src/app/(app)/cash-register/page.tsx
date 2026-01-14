@@ -12,6 +12,58 @@ import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import type { Transaction } from '@/lib/types';
+
+
+function PaymentMethodTransactionsDialog({ method, amount, transactions }: { method: string, amount: number, transactions: Transaction[] }) {
+  const methodTransactions = transactions.filter(tx => tx.paymentMethod === method);
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full justify-between h-auto py-3">
+          <span className="font-semibold">{method}</span>
+          <span className="text-primary font-bold">{formatCurrency(amount)}</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Transacciones para: {method}</DialogTitle>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead>Monto</TableHead>
+                {method === 'Pago Móvil' && <TableHead>Referencia</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {methodTransactions.length > 0 ? methodTransactions.map(tx => (
+                <TableRow key={tx.id}>
+                  <TableCell>{tx.endTime.toLocaleString()}</TableCell>
+                  <TableCell>{tx.items.map(i => i.name).join(', ')}</TableCell>
+                  <TableCell>{formatCurrency(tx.totalAmount)}</TableCell>
+                  {method === 'Pago Móvil' && <TableCell>{tx.referenceNumber}</TableCell>}
+                </TableRow>
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={method === 'Pago Móvil' ? 4 : 3} className="text-center">
+                    No hay transacciones para este método.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export default function CashRegisterPage() {
   const { transactions, expenses, customers } = useAppState();
@@ -124,14 +176,16 @@ export default function CashRegisterPage() {
           <CardHeader><CardTitle>Ingresos por Método de Pago</CardTitle></CardHeader>
           <CardContent>
             {Object.keys(incomeByPaymentMethod).length > 0 ? (
-              <ul className="space-y-2">
+              <div className="space-y-2">
                 {Object.entries(incomeByPaymentMethod).map(([method, amount]) => (
-                  <li key={method} className="flex justify-between items-center bg-muted p-2 rounded-md">
-                    <span className="font-semibold">{method}</span>
-                    <span>{formatCurrency(amount)}</span>
-                  </li>
+                  <PaymentMethodTransactionsDialog
+                    key={method}
+                    method={method}
+                    amount={amount}
+                    transactions={filteredTransactions}
+                  />
                 ))}
-              </ul>
+              </div>
             ) : <p className="text-muted-foreground text-center">No hay ingresos para el período.</p>}
           </CardContent>
         </Card>
