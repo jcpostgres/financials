@@ -21,6 +21,7 @@ import {
   ClipboardList,
   DollarSign,
   TrendingUp,
+  ArrowDownFromLine
 } from 'lucide-react';
 import { Button } from './ui/button';
 

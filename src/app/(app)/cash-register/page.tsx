@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Key } from 'lucide-react';
+import { Key, ArrowDownFromLine } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -33,6 +33,11 @@ export default function CashRegisterPage() {
   const handleCashClose = () => {
     toast({ title: 'Cierre de Caja Realizado', description: 'El resumen del día ha sido registrado (simulado).' });
   };
+  
+  const handleWithdrawal = () => {
+    // Placeholder for withdrawal logic
+    toast({ title: 'Función no implementada', description: 'La lógica para retiros de caja aún no se ha definido.' });
+  };
 
   return (
     <div>
@@ -40,8 +45,11 @@ export default function CashRegisterPage() {
         title="Control de Caja Diario"
         description={`Resumen de movimientos para el ${today.toLocaleDateString()}`}
       >
+        <Button onClick={handleWithdrawal} variant="outline">
+          <ArrowDownFromLine className="mr-2 h-4 w-4" /> Retiros de Caja
+        </Button>
         <Button onClick={handleCashClose}>
-          <Key className="mr-2 h-4 w-4" /> Realizar Cierre de Caja
+          <Key className="mr-2 h-4 w-4" /> Cierre de Caja
         </Button>
       </PageHeader>
       
