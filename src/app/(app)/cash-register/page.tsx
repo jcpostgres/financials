@@ -54,7 +54,7 @@ function PaymentMethodTransactionsDialog({ method, amount, transactions, bcvRate
                   <TableCell>{tx.endTime.toLocaleString()}</TableCell>
                   <TableCell>{tx.items.map(i => i.name).join(', ')}</TableCell>
                   <TableCell>{formatCurrency(tx.totalAmount)}</TableCell>
-                  {showBs && <TableCell>{(tx.totalAmount * bcvRate).toFixed(2)}</TableCell>}
+                  {showBs && <TableCell>Bs. {(tx.totalAmount * bcvRate).toFixed(2)}</TableCell>}
                   {method === 'Pago Móvil' && <TableCell>{tx.referenceNumber}</TableCell>}
                 </TableRow>
               )) : (
@@ -246,4 +246,5 @@ export default function CashRegisterPage() {
     </div>
   );
 
+    
     
