@@ -40,7 +40,6 @@ const adminViews = [
   { href: '/reports', label: 'Ingresos', icon: TrendingUp, group: 'Finanzas' },
   { href: '/cash-register', label: 'Control de Caja', icon: Key, group: 'Finanzas' },
   { href: '/ganancia', label: 'Ganancia', icon: BadgeDollarSign, group: 'Finanzas' },
-  { href: '/forecast', label: 'Previsión IA', icon: BrainCircuit, group: 'Finanzas' },
 ];
 
 const receptionistViews = [
