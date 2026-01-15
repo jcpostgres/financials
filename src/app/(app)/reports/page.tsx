@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -191,40 +192,6 @@ export default function ReportsPage() {
                   ))}
                 </Accordion>
               ) : <p className="text-muted-foreground text-center">No hay datos para el período.</p>}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader><CardTitle>Ganancias por Item</CardTitle></CardHeader>
-            <CardContent className="p-0">
-               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead className="text-center">Cant. Vendida</TableHead>
-                    <TableHead className="text-right">Ingresos</TableHead>
-                    <TableHead className="text-right">Costo Total</TableHead>
-                    <TableHead className="text-right">Ganancia Neta</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {earningsByItemList.length > 0 ? (
-                    earningsByItemList.map(item => (
-                      <TableRow key={item.name}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell className="text-center">{item.quantity}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.revenue)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
-                        <TableCell className="text-right font-bold text-green-400">{formatCurrency(item.revenue - item.cost)}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center">No hay ventas de items en el período seleccionado.</TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
             </CardContent>
           </Card>
 

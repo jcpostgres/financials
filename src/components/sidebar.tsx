@@ -1,3 +1,4 @@
+
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -38,7 +39,7 @@ const adminViews = [
   { href: '/expenses', label: 'Gastos', icon: Wallet, group: 'Finanzas' },
   { href: '/reports', label: 'Ingresos', icon: TrendingUp, group: 'Finanzas' },
   { href: '/cash-register', label: 'Control de Caja', icon: Key, group: 'Finanzas' },
-  { href: '/reports', label: 'Ganancia', icon: BadgeDollarSign, group: 'Finanzas' },
+  { href: '/ganancia', label: 'Ganancia', icon: BadgeDollarSign, group: 'Finanzas' },
   { href: '/reports', label: 'Planta', icon: Landmark, group: 'Finanzas' },
 ];
 
