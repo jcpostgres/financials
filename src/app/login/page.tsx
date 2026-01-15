@@ -14,15 +14,17 @@ import { Button } from '@/components/ui/button';
 import { Building, LogIn, User, UserCog } from 'lucide-react';
 import type { Role } from '@/lib/types';
 
+type Location = 'MAGALLANES' | 'SARRIAS' | 'SYFN';
+
 export default function LoginScreen() {
   const [step, setStep] = useState<'location' | 'role'>('location');
-  const [location, setLocation] = useState<'MAGALLANES' | 'SARRIAS' | null>(
+  const [location, setLocation] = useState<Location | null>(
     null
   );
   const { login } = useAuth();
   const { toast } = useToast();
 
-  const handleLocationSelect = (selectedLocation: 'MAGALLANES' | 'SARRIAS') => {
+  const handleLocationSelect = (selectedLocation: Location) => {
     setLocation(selectedLocation);
     setStep('role');
   };
@@ -68,6 +70,14 @@ export default function LoginScreen() {
               >
                 <Building className="mr-2 h-5 w-5" />
                 SARRIAS
+              </Button>
+              <Button
+                onClick={() => handleLocationSelect('SYFN')}
+                className="w-full"
+                size="lg"
+              >
+                <Building className="mr-2 h-5 w-5" />
+                SYFN
               </Button>
             </div>
           ) : (
