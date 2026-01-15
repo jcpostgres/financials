@@ -147,13 +147,13 @@ export function BarberReports({ transactions, staff }: BarberReportsProps) {
       </CardHeader>
       <CardContent>
         {barberData.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {barberData.map((barber) => (
               <Card key={barber.id} className="flex flex-col">
                 <CardHeader>
-                  <CardTitle className="text-lg">{barber.name}</CardTitle>
+                  <CardTitle className="text-base">{barber.name}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-grow space-y-2 text-sm">
+                <CardContent className="flex-grow space-y-2 text-xs">
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Ingreso (Servicios):</span>
                     <span className="font-semibold text-primary">{formatCurrency(barber.totalRevenue)}</span>
