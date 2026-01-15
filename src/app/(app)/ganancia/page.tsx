@@ -44,19 +44,24 @@ export default function GananciaPage() {
     return true;
   });
 
-  const filteredExpenses = expenses.filter(exp => {
-    if (!startDate && !endDate) return true;
+  // Monthly calculations for profit distribution
+  const today = new Date();
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  
+  const monthlyTransactions = transactions.filter(tx => {
+    const txDate = tx.endTime;
+    return txDate >= startOfMonth && txDate <= endOfMonth;
+  });
+  
+  const monthlyExpenses = expenses.filter(exp => {
     const expDate = exp.timestamp;
-    const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
-    const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
-    if (start && expDate < start) return false;
-    if (end && expDate > end) return false;
-    return true;
+    return expDate >= startOfMonth && expDate <= endOfMonth;
   });
 
-  const totalIncome = filteredTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
-  const totalExpensesValue = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const netProfit = totalIncome - totalExpensesValue;
+  const monthlyTotalIncome = monthlyTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
+  const monthlyTotalExpensesValue = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const netProfit = monthlyTotalIncome - monthlyTotalExpensesValue;
 
   // Profit Distribution Calculations
   const localProfit = netProfit * 0.5;
@@ -94,26 +99,10 @@ export default function GananciaPage() {
     <div className="space-y-6">
       <PageHeader title="GANANCIAS TOTALES" description="Detalle de rentabilidad por cada producto y servicio vendido." />
       
-      <Card>
-        <CardHeader><CardTitle>Filtro por Fecha</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><Label>Fecha Inicio:</Label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
-            <div><Label>Fecha Fin:</Label><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setFilterPreset('today')}>Hoy</Button>
-            <Button variant="outline" onClick={() => setFilterPreset('month')}>Este Mes</Button>
-            <Button variant="outline" onClick={() => setFilterPreset('year')}>Este Año</Button>
-            <Button variant="destructive" onClick={() => { setStartDate(''); setEndDate(''); }}>Limpiar</Button>
-          </div>
-        </CardContent>
-      </Card>
-
        <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Percent /> Distribución de Ganancia Neta</CardTitle>
-          <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)}</CardDescription>
+          <CardTitle className="flex items-center gap-2"><Percent /> Distribución de Ganancia Neta del Mes Actual</CardTitle>
+          <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)} para el mes en curso.</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Columna Izquierda: Ganancia Local */}
@@ -179,8 +168,20 @@ export default function GananciaPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Ganancia Neta por Ítem</CardTitle></CardHeader>
-        <CardContent className="p-0">
+        <CardHeader>
+          <CardTitle>Ganancia Neta por Ítem (Período Seleccionado)</CardTitle>
+        </CardHeader>
+        <CardContent>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><Label>Fecha Inicio:</Label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
+            <div><Label>Fecha Fin:</Label><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
+          </div>
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button variant="outline" onClick={() => setFilterPreset('today')}>Hoy</Button>
+            <Button variant="outline" onClick={() => setFilterPreset('month')}>Este Mes</Button>
+            <Button variant="outline" onClick={() => setFilterPreset('year')}>Este Año</Button>
+            <Button variant="destructive" onClick={() => { setStartDate(''); setEndDate(''); }}>Limpiar</Button>
+          </div>
             <Table>
             <TableHeader>
                 <TableRow>
