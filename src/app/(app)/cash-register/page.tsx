@@ -127,6 +127,8 @@ export default function CashRegisterPage() {
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   const netProfit = totalIncome - totalExpenses;
 
+  const allPaymentMethods = ['Efectivo BS', 'Efectivo USD', 'Tarjeta', 'Transferencia', 'Pago Móvil'];
+
   const incomeByPaymentMethod = filteredTransactions.reduce((acc, tx) => {
     acc[tx.paymentMethod] = (acc[tx.paymentMethod] || 0) + tx.totalAmount;
     return acc;
@@ -181,19 +183,17 @@ export default function CashRegisterPage() {
         <Card>
           <CardHeader><CardTitle>Ingresos por Método de Pago</CardTitle></CardHeader>
           <CardContent>
-            {Object.keys(incomeByPaymentMethod).length > 0 ? (
-              <div className="space-y-2">
-                {Object.entries(incomeByPaymentMethod).map(([method, amount]) => (
-                  <PaymentMethodTransactionsDialog
-                    key={method}
-                    method={method}
-                    amount={amount}
-                    transactions={filteredTransactions}
-                    bcvRate={appSettings.bcvRate}
-                  />
-                ))}
-              </div>
-            ) : <p className="text-muted-foreground text-center">No hay ingresos para el período.</p>}
+            <div className="space-y-2">
+              {allPaymentMethods.map(method => (
+                <PaymentMethodTransactionsDialog
+                  key={method}
+                  method={method}
+                  amount={incomeByPaymentMethod[method] || 0}
+                  transactions={filteredTransactions}
+                  bcvRate={appSettings.bcvRate}
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
         <Card>
