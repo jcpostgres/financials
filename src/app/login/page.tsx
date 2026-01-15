@@ -26,7 +26,11 @@ export default function LoginScreen() {
 
   const handleLocationSelect = (selectedLocation: Location) => {
     setLocation(selectedLocation);
-    setStep('role');
+    if (selectedLocation === 'PSYFN') {
+        handleRoleSelect('admin');
+    } else {
+        setStep('role');
+    }
   };
 
   const handleRoleSelect = (role: Role) => {
