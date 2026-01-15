@@ -21,7 +21,9 @@ import {
   ClipboardList,
   DollarSign,
   TrendingUp,
-  ArrowDownFromLine
+  ArrowDownFromLine,
+  Landmark,
+  BadgeDollarSign
 } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -37,6 +39,8 @@ const adminViews = [
   { href: '/reports', label: 'Ingresos', icon: TrendingUp, group: 'Finanzas' },
   { href: '/forecast', label: 'Previsión IA', icon: BrainCircuit, group: 'Finanzas' },
   { href: '/cash-register', label: 'Control de Caja', icon: Key, group: 'Finanzas' },
+  { href: '/reports', label: 'Ganancia', icon: BadgeDollarSign, group: 'Finanzas' },
+  { href: '/reports', label: 'Planta', icon: Landmark, group: 'Finanzas' },
 ];
 
 const receptionistViews = [
@@ -85,7 +89,7 @@ export function Sidebar() {
               </h3>
               <ul className="space-y-1">
                 {groupViews.map(({ href, label, icon: Icon }) => (
-                  <li key={href}>
+                  <li key={label}>
                     <Link href={href} passHref>
                       <Button
                         variant={pathname === href ? 'default' : 'ghost'}
