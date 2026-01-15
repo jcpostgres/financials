@@ -96,12 +96,14 @@ export function Sidebar() {
         {groupOrder.map(groupName => {
           const groupViews = groupedViews[groupName];
           if (!groupViews) return null;
+
+          const renderedGroupName = groupName === 'Finanzas' && location === 'PSYFN' ? 'PLANTA' : groupName;
           
           return (
             <div key={groupName}>
               <h3 className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center">
                 <ClipboardList className="mr-2 h-4 w-4" />
-                {groupName}
+                {renderedGroupName}
               </h3>
               <ul className="space-y-1">
                 {groupViews.map(({ href, label, icon: Icon }) => (
