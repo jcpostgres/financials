@@ -37,7 +37,6 @@ const adminViews = [
   { href: '/inventory', label: 'Inventario', icon: Package, group: 'Gestión' },
   { href: '/expenses', label: 'Gastos', icon: Wallet, group: 'Finanzas' },
   { href: '/reports', label: 'Ingresos', icon: TrendingUp, group: 'Finanzas' },
-  { href: '/forecast', label: 'Previsión IA', icon: BrainCircuit, group: 'Finanzas' },
   { href: '/cash-register', label: 'Control de Caja', icon: Key, group: 'Finanzas' },
   { href: '/reports', label: 'Ganancia', icon: BadgeDollarSign, group: 'Finanzas' },
   { href: '/reports', label: 'Planta', icon: Landmark, group: 'Finanzas' },
