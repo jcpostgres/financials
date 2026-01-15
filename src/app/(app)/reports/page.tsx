@@ -17,66 +17,20 @@ import { BarberReports } from './barber-reports';
 type IncomeCategory = 'Servicios' | 'Productos' | 'Snacks' | 'Zona Gamer';
 
 export default function ReportsPage() {
-  const { transactions, expenses, products, staff } = useAppState();
+  const { transactions, staff, products } = useAppState();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [activeTab, setActiveTab] = useState<'income' | 'barbers' | 'categories'>('income');
+  const [activeTab, setActiveTab] = useState<'barbers' | 'categories'>('barbers');
 
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate && !endDate) return true;
     const txDate = tx.endTime;
-    const start = startDate ? new Date(startDate) : null;
+    const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
     const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
     if (start && txDate < start) return false;
     if (end && txDate > end) return false;
     return true;
   });
-
-  const filteredExpenses = expenses.filter(exp => {
-    if (!startDate && !endDate) return true;
-    const expDate = exp.timestamp;
-    const start = startDate ? new Date(startDate) : null;
-    const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
-    if (start && expDate < start) return false;
-    if (end && expDate > end) return false;
-    return true;
-  });
-
-  const totalIncome = filteredTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
-  const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const netProfit = totalIncome - totalExpenses;
-
-  const transactionsByPaymentMethod = filteredTransactions.reduce((acc, tx) => {
-    const method = tx.paymentMethod;
-    if (!acc[method]) {
-      acc[method] = {
-        total: 0,
-        transactions: []
-      };
-    }
-    acc[method].total += tx.totalAmount;
-    acc[method].transactions.push(tx);
-    return acc;
-  }, {} as Record<string, { total: number; transactions: Transaction[] }>);
-
-  const earningsByItem = filteredTransactions
-    .flatMap(tx => tx.items)
-    .reduce((acc, item) => {
-      const productDetails = products.find(p => p.id === item.id);
-      const cost = item.type === 'product' && productDetails ? productDetails.cost : 0;
-      
-      if (!acc[item.id]) {
-        acc[item.id] = { name: item.name, quantity: 0, revenue: 0, cost: 0 };
-      }
-      
-      acc[item.id].quantity += item.quantity;
-      acc[item.id].revenue += item.price * item.quantity;
-      acc[item.id].cost += cost * item.quantity;
-
-      return acc;
-    }, {} as Record<string, { name: string; quantity: number; revenue: number; cost: number }>);
-  
-  const earningsByItemList = Object.values(earningsByItem).sort((a, b) => b.revenue - a.revenue);
 
   const incomeByCategories = filteredTransactions
     .flatMap(tx => tx.items)
@@ -121,10 +75,9 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reporte de Ingresos" description="Analiza el rendimiento financiero de tu negocio." />
+      <PageHeader title="Reportes Detallados" description="Analiza el rendimiento de tus barberos y categorías." />
 
       <div className="flex gap-2 mb-4">
-        <Button variant={activeTab === 'income' ? 'default' : 'outline'} onClick={() => setActiveTab('income')}>Ingresos</Button>
         <Button variant={activeTab === 'barbers' ? 'default' : 'outline'} onClick={() => setActiveTab('barbers')}>Barberos</Button>
         <Button variant={activeTab === 'categories' ? 'default' : 'outline'} onClick={() => setActiveTab('categories')}>Categorías</Button>
       </div>
@@ -144,63 +97,6 @@ export default function ReportsPage() {
           </div>
         </CardContent>
       </Card>
-
-      {activeTab === 'income' && (
-        <div className="animate-fade-in-up space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card><CardHeader><CardTitle>Ingresos Totales</CardTitle></CardHeader><CardContent className="text-2xl font-bold text-green-400">{formatCurrency(totalIncome)}</CardContent></Card>
-            <Card><CardHeader><CardTitle>Gastos Totales</CardTitle></CardHeader><CardContent className="text-2xl font-bold text-red-400">{formatCurrency(totalExpenses)}</CardContent></Card>
-            <Card><CardHeader><CardTitle>Ganancia Neta</CardTitle></CardHeader><CardContent className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatCurrency(netProfit)}</CardContent></Card>
-          </div>
-
-          <Card>
-            <CardHeader><CardTitle>Ingresos por Método de Pago</CardTitle></CardHeader>
-            <CardContent>
-              {Object.keys(transactionsByPaymentMethod).length > 0 ? (
-                <Accordion type="single" collapsible className="w-full">
-                  {Object.entries(transactionsByPaymentMethod).map(([method, data]) => (
-                    <AccordionItem value={method} key={method}>
-                      <AccordionTrigger>
-                        <div className="flex justify-between w-full pr-4">
-                          <span className="font-semibold">{method}</span>
-                          <span>{formatCurrency(data.total)}</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Fecha</TableHead>
-                              <TableHead>Items</TableHead>
-                              <TableHead>Monto</TableHead>
-                              {method === 'Pago Móvil' && <TableHead>Referencia</TableHead>}
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {data.transactions.map(tx => (
-                              <TableRow key={tx.id}>
-                                <TableCell>{tx.endTime.toLocaleString()}</TableCell>
-                                <TableCell>{tx.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}</TableCell>
-                                <TableCell>{formatCurrency(tx.totalAmount)}</TableCell>
-                                {method === 'Pago Móvil' && <TableCell>{tx.referenceNumber}</TableCell>}
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              ) : <p className="text-muted-foreground text-center">No hay datos para el período.</p>}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle>Ganancias de Socios</CardTitle></CardHeader>
-            <CardContent><p className="text-muted-foreground text-center">Cálculo de ganancias de socios (en desarrollo).</p></CardContent>
-          </Card>
-        </div>
-      )}
 
       {activeTab === 'barbers' && (
         <div className="animate-fade-in-up">

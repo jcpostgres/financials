@@ -36,7 +36,7 @@ export default function GananciaPage() {
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate && !endDate) return true;
     const txDate = tx.endTime;
-    const start = startDate ? new Date(startDate) : null;
+    const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
     const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
     if (start && txDate < start) return false;
     if (end && txDate > end) return false;
@@ -64,7 +64,7 @@ export default function GananciaPage() {
 
   return (
     <div>
-      <PageHeader title="Análisis de Ganancias" description="Detalle de rentabilidad por cada item vendido." />
+      <PageHeader title="Análisis de Ganancias por Ítem" description="Detalle de rentabilidad por cada producto y servicio vendido." />
       
       <Card className="mb-6">
         <CardHeader><CardTitle>Filtro por Fecha</CardTitle></CardHeader>
@@ -83,14 +83,14 @@ export default function GananciaPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Ganancias por Item</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Ganancia Neta por Ítem</CardTitle></CardHeader>
         <CardContent className="p-0">
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>Item</TableHead>
+                <TableHead>Ítem</TableHead>
                 <TableHead className="text-center">Cant. Vendida</TableHead>
-                <TableHead className="text-right">Ingresos</TableHead>
+                <TableHead className="text-right">Ingresos Totales</TableHead>
                 <TableHead className="text-right">Costo Total</TableHead>
                 <TableHead className="text-right">Ganancia Neta</TableHead>
                 </TableRow>

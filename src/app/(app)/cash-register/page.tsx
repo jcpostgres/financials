@@ -148,8 +148,8 @@ export default function CashRegisterPage() {
   return (
     <div>
       <PageHeader
-        title="Control de Caja"
-        description="Filtrar por día, mes y año"
+        title="Control de Caja y Distribución"
+        description="Filtre para ver un resumen financiero y la distribución de ganancias."
       >
         <Button onClick={handleWithdrawal} variant="outline">
           <ArrowDownFromLine className="mr-2 h-4 w-4" /> Retiros de Caja
