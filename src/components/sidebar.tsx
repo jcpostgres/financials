@@ -40,6 +40,7 @@ const adminViews = [
   { href: '/reports', label: 'Ingresos', icon: TrendingUp, group: 'Finanzas' },
   { href: '/cash-register', label: 'Control de Caja', icon: Key, group: 'Finanzas' },
   { href: '/ganancia', label: 'Ganancia', icon: BadgeDollarSign, group: 'Finanzas' },
+  { href: '/forecast', label: 'Previsión IA', icon: BrainCircuit, group: 'Finanzas' },
 ];
 
 const receptionistViews = [
@@ -54,7 +55,7 @@ const receptionistViews = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { role, logout } = useAuth();
+  const { role, logout, location } = useAuth();
   const views = role === 'admin' ? adminViews : receptionistViews;
 
   const dashboardView = role === 'admin' ? views.find(v => v.href === '/dashboard') : null;
@@ -75,8 +76,11 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 bg-card text-card-foreground p-4 flex flex-col shadow-lg border-r">
-      <div className="text-2xl font-bold text-primary mb-8 text-center">
+      <div className="text-2xl font-bold text-primary mb-2 text-center">
         NORDICO POS
+      </div>
+      <div className="text-center text-sm text-muted-foreground mb-6">
+        Sede: <span className="font-semibold text-primary">{location}</span>
       </div>
       <nav className="flex-grow space-y-4">
         {dashboardView && (

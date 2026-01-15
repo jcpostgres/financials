@@ -17,7 +17,7 @@ export function AddBarberToQueueContent() {
   const { staff, barberTurnQueue, addBarberToQueue } = useAppState();
   const [selectedBarberToAdd, setSelectedBarberToAdd] = useState('');
 
-  const allBarbers = staff.filter(s => s.role === 'barber');
+  const allBarbers = staff.filter(s => s.role === 'barber' || s.role === 'head_barber');
   const availableBarbersForQueue = allBarbers.filter(s => !barberTurnQueue.includes(s.id));
 
   return (
@@ -60,7 +60,7 @@ export function NewServiceForm() {
     const [selectedCategory, setSelectedCategory] = useState<'service' | 'product' | 'snack' | 'gamer' | null>(null);
 
     const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const barbers = staff.filter(s => s.role === 'barber');
+    const barbersInQueue = staff.filter(s => barberTurnQueue.includes(s.id));
 
     const getItemsForCategory = () => {
         if (selectedCategory === 'service') return services.filter(s => s.category === 'barberia' || s.category === 'nordico');
@@ -149,7 +149,7 @@ export function NewServiceForm() {
         { name: 'Servicio', value: 'service', icon: Scissors },
         { name: 'Producto', value: 'product', icon: Package },
         { name: 'Snack', value: 'snack', icon: Sandwich },
-        { name: 'Zona Gamer', value: 'gamer', icon: Gamepad2 }
+        { name: 'Gamer', value: 'gamer', icon: Gamepad2 }
     ] as const;
 
     const itemsForCategory = getItemsForCategory();
@@ -163,7 +163,7 @@ export function NewServiceForm() {
                     <Select value={barberId} onValueChange={setBarberId}>
                         <SelectTrigger id="barber"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            {barbers.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                            {barbersInQueue.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>

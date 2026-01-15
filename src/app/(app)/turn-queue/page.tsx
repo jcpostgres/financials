@@ -9,10 +9,10 @@ import { AddBarberToQueueContent, NewServiceForm } from './queue-modals';
 import { useToast } from '@/hooks/use-toast';
 
 export default function TurnQueuePage() {
-  const { staff, barberTurnQueue, openModal, rotateBarberInQueue, moveBarberInQueue, clearBarberQueue } = useAppState();
+  const { staff, barberTurnQueue, openModal, rotateBarberInQueue, moveBarberInQueue, clearBarberQueue, removeBarberFromQueue } = useAppState();
   const { toast } = useToast();
 
-  const allBarbers = staff.filter(s => s.role === 'barber');
+  const allBarbers = staff.filter(s => s.role === 'barber' || s.role === 'head_barber');
 
   const openAddBarberToQueueModal = () => {
     if (allBarbers.length === 0) {
@@ -69,6 +69,14 @@ export default function TurnQueuePage() {
                   >
                     <span className="text-lg">{index + 1}. {barber?.name || 'Barbero Desconocido'}</span>
                     <div className="flex items-center gap-1">
+                       <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => removeBarberFromQueue(barberId)}
+                        className={index === 0 ? 'text-primary-foreground hover:bg-primary/80' : 'text-destructive'}
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -78,10 +86,10 @@ export default function TurnQueuePage() {
                         <CheckSquare className="h-5 w-5" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => moveBarberInQueue(barberId, 'up')} disabled={index === 0} className={index === 0 ? 'text-primary-foreground hover:bg-primary/80' : ''}>
-                        <ChevronsUpDown className="h-4 w-4 transform rotate-180" />
+                        <ChevronsUpDown className="h-4 w-4 transform -rotate-90" />
                       </Button>
                        <Button variant="ghost" size="icon" onClick={() => moveBarberInQueue(barberId, 'down')} disabled={index === barberTurnQueue.length-1} className={index === 0 ? 'text-primary-foreground hover:bg-primary/80' : ''}>
-                        <ChevronsUpDown className="h-4 w-4" />
+                        <ChevronsUpDown className="h-4 w-4 transform rotate-90" />
                       </Button>
                     </div>
                   </li>

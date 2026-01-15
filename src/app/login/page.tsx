@@ -30,7 +30,8 @@ export default function LoginScreen() {
   };
 
   const handleRoleSelect = (role: Role) => {
-    login(role);
+    if (!location) return;
+    login(role, location);
     toast({
       title: 'Éxito',
       description: `Inicio de sesión como ${

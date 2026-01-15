@@ -1,13 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import type { 
   Service, Product, Staff, Customer, Transaction, Expense, ActiveTicket, AppSettings, TicketItem 
 } from '@/lib/types';
 import { mockServices, mockProducts, mockStaff, mockCustomers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './use-auth';
 
-interface AppState {
+interface LocationData {
   services: Service[];
   products: Product[];
   staff: Staff[];
@@ -17,6 +18,9 @@ interface AppState {
   barberTurnQueue: string[];
   activeTickets: ActiveTicket[];
   appSettings: AppSettings;
+}
+
+interface AppState extends LocationData {
   modal: {
     isOpen: boolean;
     content: ReactNode | null;
@@ -25,8 +29,8 @@ interface AppState {
   openModal: (content: ReactNode, title: string) => void;
   closeModal: () => void;
   // CRUD
-  addOrEdit: (collectionName: string, data: any, id?: string) => Promise<void>;
-  handleDelete: (collectionName: string, id: string, itemName: string) => void;
+  addOrEdit: (collectionName: keyof Omit<LocationData, 'appSettings'>, data: any, id?: string) => Promise<void>;
+  handleDelete: (collectionName: keyof Omit<LocationData, 'appSettings'>, id: string) => void;
   // Queue Logic
   addBarberToQueue: (barberId: string) => void;
   removeBarberFromQueue: (barberId: string) => void;
@@ -43,21 +47,65 @@ interface AppState {
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
 
+const initialLocationData: LocationData = {
+  services: mockServices,
+  products: mockProducts,
+  staff: mockStaff,
+  customers: mockCustomers,
+  transactions: [],
+  expenses: [],
+  barberTurnQueue: ['s1'],
+  activeTickets: [],
+  appSettings: { bcvRate: 36.5 },
+};
+
 export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
+  const { location, isLoggedIn } = useAuth();
   
-  // Data States
-  const [services, setServices] = useState<Service[]>(mockServices);
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [staff, setStaff] = useState<Staff[]>(mockStaff);
-  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [barberTurnQueue, setBarberTurnQueue] = useState<string[]>(['s1']);
-  const [activeTickets, setActiveTickets] = useState<ActiveTicket[]>([]);
-  const [appSettings, setAppSettings] = useState<AppSettings>({ bcvRate: 36.5 });
+  const [allData, setAllData] = useState<Record<string, LocationData>>({});
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      try {
+        const storedData = localStorage.getItem('nordicoAppData');
+        if (storedData) {
+          setAllData(JSON.parse(storedData, (key, value) => {
+            if (key === 'startTime' || key === 'endTime' || key === 'timestamp' || key === 'createdAt') {
+              return new Date(value);
+            }
+            return value;
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load data from localStorage", error);
+      }
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      try {
+        localStorage.setItem('nordicoAppData', JSON.stringify(allData));
+      } catch (error) {
+        console.error("Failed to save data to localStorage", error);
+      }
+    }
+  }, [allData, isLoggedIn]);
+
+  const currentLocationData = useMemo(() => {
+    if (!location || !allData) return initialLocationData;
+    return allData[location] || initialLocationData;
+  }, [allData, location]);
   
-  // UI States
+  const updateCurrentLocationData = (updater: (prev: LocationData) => LocationData) => {
+    if (!location) return;
+    setAllData(prevAll => ({
+      ...prevAll,
+      [location]: updater(prevAll[location] || initialLocationData),
+    }));
+  };
+
   const [modal, setModal] = useState<{ isOpen: boolean; content: ReactNode | null; title: string }>({
     isOpen: false,
     content: null,
@@ -67,8 +115,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const openModal = (content: ReactNode, title: string) => setModal({ isOpen: true, content, title });
   const closeModal = () => setModal({ isOpen: false, content: null, title: '' });
 
-  // CRUD Functions
-  const addOrEdit = async (collectionName: string, data: any, id?: string) => {
+  const addOrEdit = async (collectionName: keyof Omit<LocationData, 'appSettings'>, data: any, id?: string) => {
     const dataToSave = { ...data };
       Object.keys(dataToSave).forEach(key => {
           if (['price', 'cost', 'stock', 'rentAmount', 'commissionPercentage', 'amount', 'monthlyPayment'].includes(key)) {
@@ -76,111 +123,99 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           }
       });
 
-    const updater = (setter: React.Dispatch<React.SetStateAction<any[]>>) => {
-      if (id) {
-        setter(prev => prev.map(item => item.id === id ? { ...item, ...dataToSave } : item));
-        toast({ title: "Éxito", description: 'Elemento actualizado.', variant: "default" });
-      } else {
-        const newItem = { ...dataToSave, id: crypto.randomUUID() };
-        if (collectionName !== 'expenses') {
-          newItem.createdAt = new Date();
+    updateCurrentLocationData(prev => {
+        const collection = prev[collectionName] as any[];
+        let newCollection;
+        if (id) {
+            newCollection = collection.map(item => item.id === id ? { ...item, ...dataToSave } : item);
+            toast({ title: "Éxito", description: 'Elemento actualizado.', variant: "default" });
+        } else {
+            const newItem = { ...dataToSave, id: crypto.randomUUID() };
+            if (collectionName !== 'expenses' && collectionName !== 'transactions') {
+                newItem.createdAt = new Date();
+            }
+             if (collectionName === 'expenses') {
+                newItem.timestamp = new Date();
+            }
+            newCollection = [...collection, newItem];
+            toast({ title: "Éxito", description: 'Elemento agregado.', variant: "default" });
         }
-        setter(prev => [...prev, newItem]);
-        toast({ title: "Éxito", description: 'Elemento agregado.', variant: "default" });
-      }
-    };
+        return { ...prev, [collectionName]: newCollection };
+    });
     
-    switch (collectionName) {
-      case 'services': updater(setServices); break;
-      case 'products': updater(setProducts); break;
-      case 'staff': updater(setStaff); break;
-      case 'customers': updater(setCustomers); break;
-      case 'expenses': 
-        setExpenses(prev => [...prev, { ...dataToSave, id: crypto.randomUUID(), timestamp: new Date() }]);
-        toast({ title: "Éxito", description: 'Gasto registrado.', variant: "default" });
-        break;
-      default: 
-        toast({ title: "Error", description: `Colección desconocida: ${collectionName}`, variant: "destructive"});
-        return;
-    }
     closeModal();
   };
   
-  const handleDelete = (collectionName: string, id: string) => {
-    const updater = (setter: React.Dispatch<React.SetStateAction<any[]>>) => {
-      setter(prev => prev.filter(item => item.id !== id));
+  const handleDelete = (collectionName: keyof Omit<LocationData, 'appSettings'>, id: string) => {
+    updateCurrentLocationData(prev => {
+      const collection = prev[collectionName] as any[];
+      const newCollection = collection.filter(item => item.id !== id);
       toast({ title: "Éxito", description: 'Elemento eliminado.', variant: "default" });
-    };
-
-    switch (collectionName) {
-      case 'services': updater(setServices); break;
-      case 'products': updater(setProducts); break;
-      case 'staff': updater(setStaff); break;
-      case 'customers': updater(setCustomers); break;
-      case 'expenses': updater(setExpenses); break;
-      default: 
-        toast({ title: "Error", description: `Colección desconocida: ${collectionName}`, variant: "destructive"});
-        return;
-    }
+      return { ...prev, [collectionName]: newCollection };
+    });
     closeModal();
   };
 
-  // Queue Logic
   const addBarberToQueue = (barberId: string) => {
     if (!barberId) {
       toast({ title: "Error", description: 'Seleccione un barbero.', variant: "destructive"});
       return;
     }
-    if (barberTurnQueue.includes(barberId)) {
-      toast({ title: "Información", description: 'Este barbero ya está en la cola.', variant: "default"});
-      return;
-    }
-    setBarberTurnQueue(prev => [...prev, barberId]);
-    toast({ title: "Éxito", description: 'Barbero añadido a la cola.', variant: "default"});
+    updateCurrentLocationData(prev => {
+      if (prev.barberTurnQueue.includes(barberId)) {
+        toast({ title: "Información", description: 'Este barbero ya está en la cola.', variant: "default"});
+        return prev;
+      }
+      toast({ title: "Éxito", description: 'Barbero añadido a la cola.', variant: "default"});
+      return { ...prev, barberTurnQueue: [...prev.barberTurnQueue, barberId] };
+    });
     closeModal();
   };
 
   const removeBarberFromQueue = (barberId: string) => {
-    setBarberTurnQueue(prev => prev.filter(id => id !== barberId));
+     updateCurrentLocationData(prev => ({
+        ...prev,
+        barberTurnQueue: prev.barberTurnQueue.filter(id => id !== barberId)
+     }));
     toast({ title: "Éxito", description: 'Barbero removido de la cola.', variant: "default"});
-    closeModal();
   };
-
+  
   const rotateBarberInQueue = (barberId: string) => {
-    setBarberTurnQueue(prevQueue => {
-      const newQueue = prevQueue.filter(id => id !== barberId);
-      newQueue.push(barberId);
-      return newQueue;
+    updateCurrentLocationData(prev => {
+        const newQueue = prev.barberTurnQueue.filter(id => id !== barberId);
+        newQueue.push(barberId);
+        toast({ title: "Turno Finalizado", description: 'El barbero ha sido movido al final de la cola.', variant: "default"});
+        return { ...prev, barberTurnQueue: newQueue };
     });
-    toast({ title: "Turno Finalizado", description: 'El barbero ha sido movido al final de la cola.', variant: "default"});
   };
 
   const clearBarberQueue = () => {
-    setBarberTurnQueue([]);
+    updateCurrentLocationData(prev => ({ ...prev, barberTurnQueue: [] }));
     toast({ title: "Cola Limpiada", description: 'Se han eliminado todos los barberos de la cola.', variant: "default"});
   };
   
   const moveBarberInQueue = (barberId: string, direction: 'up' | 'down') => {
-      const currentIndex = barberTurnQueue.indexOf(barberId);
-      if (currentIndex === -1) return;
+      updateCurrentLocationData(prev => {
+          const currentIndex = prev.barberTurnQueue.indexOf(barberId);
+          if (currentIndex === -1) return prev;
 
-      let newIndex;
-      if (direction === 'up') {
-          newIndex = Math.max(0, currentIndex - 1);
-      } else {
-          newIndex = Math.min(barberTurnQueue.length - 1, currentIndex + 1);
-      }
+          let newIndex;
+          if (direction === 'up') {
+              newIndex = Math.max(0, currentIndex - 1);
+          } else {
+              newIndex = Math.min(prev.barberTurnQueue.length - 1, currentIndex + 1);
+          }
 
-      if (newIndex === currentIndex) return;
+          if (newIndex === currentIndex) return prev;
 
-      const newQueue = [...barberTurnQueue];
-      const [movedBarber] = newQueue.splice(currentIndex, 1);
-      newQueue.splice(newIndex, 0, movedBarber);
-      setBarberTurnQueue(newQueue);
-      toast({ title: "Éxito", description: 'Cola de barberos actualizada.', variant: "default"});
+          const newQueue = [...prev.barberTurnQueue];
+          const [movedBarber] = newQueue.splice(currentIndex, 1);
+          newQueue.splice(newIndex, 0, movedBarber);
+          toast({ title: "Éxito", description: 'Cola de barberos actualizada.', variant: "default"});
+          return { ...prev, barberTurnQueue: newQueue };
+      });
   };
 
-  // Ticket Logic
   const startService = (customerId: string, barberId: string, items: TicketItem[], totalAmount: number) => {
     if (!customerId || !barberId || items.length === 0) {
       toast({ title: "Error", description: 'Cliente, barbero y al menos un item son requeridos.', variant: "destructive"});
@@ -195,14 +230,20 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       startTime: new Date(),
       status: 'active',
     };
-    setActiveTickets(prev => [...prev, newTicket]);
-    setBarberTurnQueue(prev => prev.filter(id => id !== barberId));
+
+    updateCurrentLocationData(prev => ({
+      ...prev,
+      activeTickets: [...prev.activeTickets, newTicket],
+      barberTurnQueue: prev.barberTurnQueue.filter(id => id !== barberId),
+    }));
+    
     toast({ title: "Éxito", description: 'Servicio iniciado.', variant: "default"});
     closeModal();
   };
   
   const addItemToTicket = (ticketId: string, item: Service | Product, type: 'service' | 'product') => {
-      setActiveTickets(prevTickets => prevTickets.map(ticket => {
+    updateCurrentLocationData(prev => {
+      const newActiveTickets = prev.activeTickets.map(ticket => {
           if (ticket.id === ticketId) {
               const newItem: TicketItem = { id: item.id, name: item.name, price: Number(item.price), type, quantity: 1, category: item.category };
               const updatedItems = [...ticket.items, newItem];
@@ -210,9 +251,11 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
               return { ...ticket, items: updatedItems, totalAmount: newTotal };
           }
           return ticket;
-      }));
+      });
       toast({ title: "Éxito", description: `${item.name} añadido al ticket.`, variant: "default"});
-      closeModal();
+      return { ...prev, activeTickets: newActiveTickets };
+    });
+    closeModal();
   };
 
   const finalizePayment = (ticket: ActiveTicket, paymentMethod: string, referenceNumber?: string) => {
@@ -229,47 +272,48 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       endTime: new Date(),
       recordedBy: 'user-id-placeholder'
     };
-    setTransactions(prev => [...prev, newTransaction]);
-    setActiveTickets(prev => prev.filter(t => t.id !== ticket.id));
 
-    // Update stock
-    ticket.items.forEach(item => {
-      if (item.type === 'product' && item.category !== 'Cortesía' && item.category !== 'Snack de Cortesía') {
-        setProducts(prev => prev.map(p => 
-          p.id === item.id ? { ...p, stock: p.stock - item.quantity } : p
-        ));
+    updateCurrentLocationData(prev => {
+      const updatedProducts = prev.products.map(p => {
+        const itemInTicket = ticket.items.find(item => item.id === p.id && item.type === 'product');
+        if (itemInTicket) {
+          return { ...p, stock: p.stock - itemInTicket.quantity };
+        }
+        return p;
+      });
+
+      const newBarberTurnQueue = prev.barberTurnQueue;
+      if (ticket.barberId && !newBarberTurnQueue.includes(ticket.barberId)) {
+        newBarberTurnQueue.push(ticket.barberId);
       }
+      
+      toast({ title: "Éxito", description: 'Venta finalizada y registrada.', variant: "default"});
+      
+      return {
+        ...prev,
+        transactions: [...prev.transactions, newTransaction],
+        activeTickets: prev.activeTickets.filter(t => t.id !== ticket.id),
+        products: updatedProducts,
+        barberTurnQueue: newBarberTurnQueue
+      };
     });
-
-    // Add barber back to queue
-    if (ticket.barberId && !barberTurnQueue.includes(ticket.barberId)) {
-        setBarberTurnQueue(prev => [...prev, ticket.barberId]);
-    }
-    
-    toast({ title: "Éxito", description: 'Venta finalizada y registrada.', variant: "default"});
     closeModal();
   };
 
-  // Settings
   const updateBcvRate = (rate: number) => {
     if (isNaN(rate) || rate <= 0) {
       toast({ title: "Error", description: 'Ingrese una tasa de BCV válida.', variant: "destructive"});
       return;
     }
-    setAppSettings({ bcvRate: rate });
+    updateCurrentLocationData(prev => ({
+        ...prev,
+        appSettings: { ...prev.appSettings, bcvRate: rate }
+    }));
     toast({ title: "Éxito", description: 'Tasa BCV actualizada.', variant: "default"});
   };
 
   const value: AppState = {
-    services,
-    products,
-    staff,
-    customers,
-    transactions,
-    expenses,
-    barberTurnQueue,
-    activeTickets,
-    appSettings,
+    ...currentLocationData,
     modal,
     openModal,
     closeModal,
