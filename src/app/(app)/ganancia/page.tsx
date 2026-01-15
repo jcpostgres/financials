@@ -115,7 +115,7 @@ export default function GananciaPage() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="flex items-center gap-2"><Percent /> Distribución de Ganancia Neta</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-xl"><Percent /> Distribución de Ganancia Neta</CardTitle>
               <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)} para {periodLabel}.</CardDescription>
             </div>
             <div className="flex gap-2">
@@ -250,6 +250,8 @@ export default function GananciaPage() {
     </div>
   );
 }
+
+    
 
     
 
