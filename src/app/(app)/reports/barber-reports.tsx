@@ -151,23 +151,23 @@ export function BarberReports({ transactions, staff }: BarberReportsProps) {
             {barberData.map((barber) => (
               <Card key={barber.id} className="flex flex-col">
                 <CardHeader>
-                  <CardTitle className="text-xl">{barber.name}</CardTitle>
+                  <CardTitle className="text-lg">{barber.name}</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-grow space-y-3">
+                <CardContent className="flex-grow space-y-2 text-sm">
                    <div className="flex justify-between">
                     <span className="text-muted-foreground">Ingreso (Servicios):</span>
-                    <span className="font-bold text-primary">{formatCurrency(barber.totalRevenue)}</span>
+                    <span className="font-semibold text-primary">{formatCurrency(barber.totalRevenue)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Comisión Ganada:</span>
-                    <span className="font-bold text-green-400">{formatCurrency(barber.commissionEarned)}</span>
+                    <span className="font-semibold text-green-400">{formatCurrency(barber.commissionEarned)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Servicios (Semana):</span>
-                    <span className="font-bold">{barber.weeklyServiceCount}</span>
+                    <span className="font-semibold">{barber.weeklyServiceCount}</span>
                   </div>
-                   <div className="space-y-1">
-                      <p className="text-sm text-muted-foreground">
+                   <div className="space-y-1 pt-1">
+                      <p className="text-xs text-muted-foreground">
                         {barber.role === 'head_barber' 
                           ? `Comisión Fija: ${barber.effectiveCommissionPercentage}%`
                           : `Progreso al ${barber.nextTier > 30 ? '65%' : '60%'}: ${barber.servicesNeeded} servicios restantes`
