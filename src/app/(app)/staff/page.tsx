@@ -67,8 +67,11 @@ export default function StaffPage() {
                       <Badge variant="outline" className="capitalize">{member.role.replace('_', ' ')}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {(member.role === 'barber' || member.role === 'head_barber') && (
-                        `Comisión: ${member.commissionPercentage || 0}%`
+                      {member.role === 'barber' && (
+                        `Comisión Semanal: 55%-65% (según volumen)`
+                      )}
+                      {member.role === 'head_berber' && (
+                         `Comisión Fija: ${member.commissionPercentage || 0}%`
                       )}
                        {member.role === 'barber' && member.rentAmount && (
                         ` | Alquiler: ${formatCurrency(member.rentAmount)}`
