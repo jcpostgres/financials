@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Building, LogIn, User, UserCog } from 'lucide-react';
 import type { Role } from '@/lib/types';
 
-type Location = 'MAGALLANES' | 'SARRIAS' | 'SYFN';
+type Location = 'MAGALLANES' | 'SARRIAS' | 'PSYFN';
 
 export default function LoginScreen() {
   const [step, setStep] = useState<'location' | 'role'>('location');
@@ -72,12 +72,12 @@ export default function LoginScreen() {
                 SARRIAS
               </Button>
               <Button
-                onClick={() => handleLocationSelect('SYFN')}
+                onClick={() => handleLocationSelect('PSYFN')}
                 className="w-full"
                 size="lg"
               >
                 <Building className="mr-2 h-5 w-5" />
-                SYFN
+                PSYFN
               </Button>
             </div>
           ) : (
