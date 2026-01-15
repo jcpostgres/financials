@@ -26,7 +26,7 @@ export function StaffForm({ isEditing, onSave, initialData }: StaffFormProps) {
   };
 
   const handleSelectChange = (value: string) => {
-    setFormData(prev => ({...prev, role: value as 'barber' | 'recepcionista' | 'limpieza'}));
+    setFormData(prev => ({...prev, role: value as 'barber' | 'recepcionista' | 'limpieza' | 'head_barber'}));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -46,20 +46,23 @@ export function StaffForm({ isEditing, onSave, initialData }: StaffFormProps) {
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="barber">Barbero</SelectItem>
+            <SelectItem value="head_barber">Jefe de Barbero</SelectItem>
             <SelectItem value="recepcionista">Recepcionista</SelectItem>
             <SelectItem value="limpieza">Limpieza</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      {formData.role === 'barber' && (
+      {(formData.role === 'barber' || formData.role === 'head_barber') && (
         <>
           <div className="grid grid-cols-2 gap-4">
+             {formData.role === 'barber' &&
+                <div className="space-y-2">
+                    <Label htmlFor="rentAmount">Alquiler Semanal ($):</Label>
+                    <Input id="rentAmount" name="rentAmount" type="number" value={formData.rentAmount || ''} onChange={handleChange} />
+                </div>
+             }
             <div className="space-y-2">
-              <Label htmlFor="rentAmount">Alquiler Semanal ($):</Label>
-              <Input id="rentAmount" name="rentAmount" type="number" value={formData.rentAmount || ''} onChange={handleChange} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="commissionPercentage">Comisión (%):</Label>
+              <Label htmlFor="commissionPercentage">{formData.role === 'head_barber' ? 'Comisión Fija (%)' : 'Comisión Base (%)'}</Label>
               <Input id="commissionPercentage" name="commissionPercentage" type="number" value={formData.commissionPercentage || ''} onChange={handleChange} />
             </div>
           </div>

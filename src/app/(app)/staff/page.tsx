@@ -64,11 +64,14 @@ export default function StaffPage() {
                   <TableRow key={member.id}>
                     <TableCell className="font-medium">{member.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="capitalize">{member.role}</Badge>
+                      <Badge variant="outline" className="capitalize">{member.role.replace('_', ' ')}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {member.role === 'barber' && (
-                        `Alquiler: ${formatCurrency(member.rentAmount)} | Comisión: ${member.commissionPercentage || 0}%`
+                      {(member.role === 'barber' || member.role === 'head_barber') && (
+                        `Comisión: ${member.commissionPercentage || 0}%`
+                      )}
+                       {member.role === 'barber' && member.rentAmount && (
+                        ` | Alquiler: ${formatCurrency(member.rentAmount)}`
                       )}
                       {(member.role === 'recepcionista' || member.role === 'limpieza') && (
                         `Pago Mensual: ${formatCurrency(member.monthlyPayment)}`

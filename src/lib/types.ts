@@ -20,7 +20,7 @@ export interface Product {
 export interface Staff {
   id: string;
   name: string;
-  role: 'barber' | 'recepcionista' | 'limpieza';
+  role: 'barber' | 'recepcionista' | 'limpieza' | 'head_barber';
   rentAmount?: number;
   commissionPercentage?: number;
   monthlyPayment?: number;
