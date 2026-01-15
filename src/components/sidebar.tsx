@@ -44,8 +44,8 @@ const adminViews = [
 
 const receptionistViews = [
   { href: '/turn-queue', label: 'Cola de Turno', icon: ListOrdered, group: 'Recepción' },
-  { href: '/pos', label: 'Cobro de Ventas', icon: UserCheck, group: 'Recepción' },
-  { href: '/settings', label: 'Tasa de Cambio BCV', icon: DollarSign, group: 'Recepción' },
+  { href: '/pos', label: 'Cobro de Ventas', icon: UserCheck, 'group': 'Recepción' },
+  { href: '/settings', label: 'Tasa de Cambio BCV', icon: DollarSign, 'group': 'Recepción' },
   { href: '/customers', label: 'Clientes', icon: Scissors, group: 'Gestión' },
   { href: '/inventory', label: 'Inventario', icon: Package, group: 'Gestión' },
   { href: '/expenses', label: 'Gastos', icon: Wallet, group: 'Finanzas' },
@@ -57,7 +57,10 @@ export function Sidebar() {
   const { role, logout } = useAuth();
   const views = role === 'admin' ? adminViews : receptionistViews;
 
-  const groupedViews = views.reduce((acc, view) => {
+  const dashboardView = role === 'admin' ? views.find(v => v.href === '/dashboard') : null;
+  const otherViews = views.filter(v => v.href !== '/dashboard');
+
+  const groupedViews = otherViews.reduce((acc, view) => {
     const group = view.group || 'General';
     if (!acc[group]) {
       acc[group] = [];
@@ -76,6 +79,17 @@ export function Sidebar() {
         NORDICO POS
       </div>
       <nav className="flex-grow space-y-4">
+        {dashboardView && (
+            <Link href={dashboardView.href} passHref>
+                <Button
+                variant={pathname === dashboardView.href ? 'default' : 'secondary'}
+                className='w-full justify-start text-base h-12'
+                >
+                <dashboardView.icon className="mr-3 h-6 w-6" />
+                {dashboardView.label}
+                </Button>
+            </Link>
+        )}
         {groupOrder.map(groupName => {
           const groupViews = groupedViews[groupName];
           if (!groupViews) return null;
