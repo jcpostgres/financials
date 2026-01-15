@@ -18,7 +18,8 @@ export default function GananciaPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  // -1 represents "Annual"
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const setFilterPreset = (preset: 'today' | 'month' | 'year') => {
@@ -48,24 +49,25 @@ export default function GananciaPage() {
     return true;
   });
 
-  // Monthly calculations for profit distribution
-  const startOfMonth = new Date(selectedYear, selectedMonth, 1);
-  const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
-  endOfMonth.setHours(23, 59, 59, 999);
+  // Monthly or Annual calculations for profit distribution
+  const isAnnual = selectedMonth === -1;
+  const periodStart = isAnnual ? new Date(selectedYear, 0, 1) : new Date(selectedYear, selectedMonth, 1);
+  const periodEnd = isAnnual ? new Date(selectedYear, 11, 31, 23, 59, 59, 999) : new Date(new Date(selectedYear, selectedMonth + 1, 0).setHours(23, 59, 59, 999));
+
   
-  const monthlyTransactions = transactions.filter(tx => {
+  const periodTransactions = transactions.filter(tx => {
     const txDate = tx.endTime;
-    return txDate >= startOfMonth && txDate <= endOfMonth;
+    return txDate >= periodStart && txDate <= periodEnd;
   });
   
-  const monthlyExpenses = expenses.filter(exp => {
+  const periodExpenses = expenses.filter(exp => {
     const expDate = exp.timestamp;
-    return expDate >= startOfMonth && expDate <= endOfMonth;
+    return expDate >= periodStart && expDate <= periodEnd;
   });
 
-  const monthlyTotalIncome = monthlyTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
-  const monthlyTotalExpensesValue = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const netProfit = monthlyTotalIncome - monthlyTotalExpensesValue;
+  const periodTotalIncome = periodTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
+  const periodTotalExpensesValue = periodExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const netProfit = periodTotalIncome - periodTotalExpensesValue;
 
   // Profit Distribution Calculations
   const localProfit = netProfit * 0.5;
@@ -102,6 +104,8 @@ export default function GananciaPage() {
   const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const periodLabel = isAnnual ? selectedYear : `${monthNames[selectedMonth]} ${selectedYear}`;
+
 
   return (
     <div className="space-y-6">
@@ -112,12 +116,13 @@ export default function GananciaPage() {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="flex items-center gap-2"><Percent /> Distribución de Ganancia Neta</CardTitle>
-              <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)} para {monthNames[selectedMonth]} {selectedYear}.</CardDescription>
+              <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)} para {periodLabel}.</CardDescription>
             </div>
             <div className="flex gap-2">
                 <Select value={String(selectedMonth)} onValueChange={(val) => setSelectedMonth(Number(val))}>
                     <SelectTrigger className="w-[180px]"><SelectValue placeholder="Mes" /></SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="-1">Anual</SelectItem>
                         {monthNames.map((month, index) => (
                             <SelectItem key={index} value={String(index)}>{month}</SelectItem>
                         ))}
@@ -245,5 +250,7 @@ export default function GananciaPage() {
     </div>
   );
 }
+
+    
 
     
