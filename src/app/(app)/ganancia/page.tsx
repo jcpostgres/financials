@@ -64,7 +64,7 @@ export default function GananciaPage() {
 
   return (
     <div>
-      <PageHeader title="Análisis de Ganancias por Ítem" description="Detalle de rentabilidad por cada producto y servicio vendido." />
+      <PageHeader title="GANANCIAS TOTALES" description="Detalle de rentabilidad por cada producto y servicio vendido." />
       
       <Card className="mb-6">
         <CardHeader><CardTitle>Filtro por Fecha</CardTitle></CardHeader>
