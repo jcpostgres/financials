@@ -29,7 +29,7 @@ import {
 import { Button } from './ui/button';
 
 const adminViews = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home, group: 'General' },
+  { href: '/dashboard', label: 'INICIO', group: 'General', icon: Home },
   { href: '/turn-queue', label: 'Cola de Turno', icon: ListOrdered, group: 'Recepción' },
   { href: '/pos', label: 'Cobro de Ventas', icon: UserCheck, group: 'Recepción' },
   { href: '/settings', label: 'Tasa de Cambio BCV', icon: DollarSign, group: 'Recepción' },
