@@ -14,7 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import type { Transaction } from '@/lib/types';
 import { BarberReports } from './barber-reports';
 
-type IncomeCategory = 'Barberia' | 'Productos' | 'Snacks' | 'Zona Gamer';
+type IncomeCategory = 'Servicio de Barberia' | 'Productos' | 'Snacks' | 'Zona Gamer';
 
 export default function ReportsPage() {
   const { transactions, staff, products } = useAppState();
@@ -37,7 +37,7 @@ export default function ReportsPage() {
     .reduce((acc, item) => {
       let category: IncomeCategory | null = null;
       if (item.category === 'barberia' || item.category === 'nordico') {
-        category = 'Barberia';
+        category = 'Servicio de Barberia';
       } else if (item.category === 'zona gamer') {
         category = 'Zona Gamer';
       } else if (item.category === 'Snack') {
