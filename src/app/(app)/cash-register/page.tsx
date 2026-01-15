@@ -183,7 +183,7 @@ export default function CashRegisterPage() {
         <Card>
           <CardHeader><CardTitle>Ingresos por Método de Pago</CardTitle></CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {allPaymentMethods.map(method => (
                 <PaymentMethodTransactionsDialog
                   key={method}
