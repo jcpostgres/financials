@@ -11,11 +11,15 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
 import { Percent, Landmark, Crown, Handshake, Building } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function GananciaPage() {
   const { transactions, products, expenses } = useAppState();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const setFilterPreset = (preset: 'today' | 'month' | 'year') => {
     const today = new Date();
@@ -45,9 +49,9 @@ export default function GananciaPage() {
   });
 
   // Monthly calculations for profit distribution
-  const today = new Date();
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  const startOfMonth = new Date(selectedYear, selectedMonth, 1);
+  const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
+  endOfMonth.setHours(23, 59, 59, 999);
   
   const monthlyTransactions = transactions.filter(tx => {
     const txDate = tx.endTime;
@@ -95,14 +99,40 @@ export default function GananciaPage() {
   
   const earningsByItemList = Object.values(earningsByItem).sort((a, b) => b.revenue - a.revenue);
 
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
   return (
     <div className="space-y-6">
       <PageHeader title="GANANCIAS TOTALES" description="Detalle de rentabilidad por cada producto y servicio vendido." />
       
        <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Percent /> Distribución de Ganancia Neta del Mes Actual</CardTitle>
-          <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)} para el mes en curso.</CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="flex items-center gap-2"><Percent /> Distribución de Ganancia Neta</CardTitle>
+              <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)} para {monthNames[selectedMonth]} {selectedYear}.</CardDescription>
+            </div>
+            <div className="flex gap-2">
+                <Select value={String(selectedMonth)} onValueChange={(val) => setSelectedMonth(Number(val))}>
+                    <SelectTrigger className="w-[180px]"><SelectValue placeholder="Mes" /></SelectTrigger>
+                    <SelectContent>
+                        {monthNames.map((month, index) => (
+                            <SelectItem key={index} value={String(index)}>{month}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <Select value={String(selectedYear)} onValueChange={(val) => setSelectedYear(Number(val))}>
+                    <SelectTrigger className="w-[120px]"><SelectValue placeholder="Año" /></SelectTrigger>
+                    <SelectContent>
+                        {years.map(year => (
+                           <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Columna Izquierda: Ganancia Local */}
@@ -215,3 +245,5 @@ export default function GananciaPage() {
     </div>
   );
 }
+
+    
