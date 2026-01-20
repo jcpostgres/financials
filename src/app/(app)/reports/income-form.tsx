@@ -96,7 +96,7 @@ export function IncomeForm({ onSave, isEditing, initialData }: ManualTransaction
 
         onSave(transactionData);
         closeModal();
-        toast({ title: 'Éxito', description: isEditing ? 'Ingreso actualizado' : 'Ingreso registrado' });
+        
     };
     
     const openCreateCustomerModal = () => {
@@ -111,7 +111,7 @@ export function IncomeForm({ onSave, isEditing, initialData }: ManualTransaction
     };
 
     return (
-        <div className="space-y-4 p-6">
+        <div className="space-y-4 p-6 max-h-[80vh] overflow-y-auto">
             <div className="space-y-1">
                 <Label htmlFor="customer">Cliente:</Label>
                  <Select value={customerId} onValueChange={setCustomerId}>

@@ -14,14 +14,19 @@ import { CustomerForm } from '../customers/customer-form';
 import { useToast } from '@/hooks/use-toast';
 
 export function AddBarberToQueueContent() {
-  const { staff, barberTurnQueue, addBarberToQueue } = useAppState();
+  const { staff, barberTurnQueue, addBarberToQueue, closeModal } = useAppState();
   const [selectedBarberToAdd, setSelectedBarberToAdd] = useState('');
 
   const allBarbers = staff.filter(s => s.role.toLowerCase().includes('barber'));
   const availableBarbersForQueue = allBarbers.filter(s => !barberTurnQueue.includes(s.id));
+  
+  const handleAdd = () => {
+    addBarberToQueue(selectedBarberToAdd);
+    closeModal();
+  }
 
   return (
-    <div>
+    <div className="p-6">
       <div className="mb-4 space-y-2">
         <Label>Seleccionar Barbero para la cola:</Label>
         {allBarbers.length === 0 ? (
@@ -40,7 +45,7 @@ export function AddBarberToQueueContent() {
         )}
       </div>
       {availableBarbersForQueue.length > 0 && (
-        <Button onClick={() => addBarberToQueue(selectedBarberToAdd)} className="w-full" disabled={!selectedBarberToAdd}>
+        <Button onClick={handleAdd} className="w-full" disabled={!selectedBarberToAdd}>
           Añadir a la Cola
         </Button>
       )}
@@ -49,7 +54,7 @@ export function AddBarberToQueueContent() {
 }
 
 export function NewServiceForm() {
-    const { staff, customers, services, products, barberTurnQueue, startService, openModal, addOrEdit } = useAppState();
+    const { staff, customers, services, products, barberTurnQueue, startService, openModal, addOrEdit, closeModal } = useAppState();
     const { toast } = useToast();
     
     const [barberId, setBarberId] = useState(barberTurnQueue[0] || '');
@@ -144,6 +149,7 @@ export function NewServiceForm() {
 
     const handleStartService = () => {
         startService(customerId, barberId, items, totalAmount);
+        closeModal();
     };
 
     const openCreateCustomerModal = () => {
@@ -167,7 +173,7 @@ export function NewServiceForm() {
     const itemsForCategory = getItemsForCategory();
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 p-6 max-h-[80vh] overflow-y-auto">
             {/* Barber and Customer Selection */}
             <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
