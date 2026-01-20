@@ -20,7 +20,7 @@ interface ManualTransactionFormProps {
 }
 
 export function IncomeForm({ onSave, isEditing, initialData }: ManualTransactionFormProps) {
-    const { customers, products, openModal, addOrEdit } = useAppState();
+    const { customers, products, openModal, addOrEdit, closeModal } = useAppState();
     const { toast } = useToast();
     
     const [customerId, setCustomerId] = useState('');
@@ -95,6 +95,8 @@ export function IncomeForm({ onSave, isEditing, initialData }: ManualTransaction
         };
 
         onSave(transactionData);
+        closeModal();
+        toast({ title: 'Éxito', description: isEditing ? 'Ingreso actualizado' : 'Ingreso registrado' });
     };
     
     const openCreateCustomerModal = () => {
@@ -129,7 +131,7 @@ export function IncomeForm({ onSave, isEditing, initialData }: ManualTransaction
                     <Select value={selectedProduct} onValueChange={setSelectedProduct}>
                         <SelectTrigger><SelectValue placeholder="-- Seleccione un producto --" /></SelectTrigger>
                         <SelectContent>
-                            {products.map((p, index) => (
+                            {products.filter(p => !['Cortesía', 'Snack de Cortesía'].includes(p.category)).map((p, index) => (
                                 <SelectItem key={`${p.id}_${index}`} value={`${p.id}_${index}`}>
                                     {p.name} ({formatCurrency(p.price)})
                                 </SelectItem>
@@ -174,8 +176,8 @@ export function IncomeForm({ onSave, isEditing, initialData }: ManualTransaction
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                     <SelectTrigger id="paymentMethod"><SelectValue placeholder="-- Seleccione Método --" /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Efectivo USD">Efectivo $</SelectItem>
-                        <SelectItem value="Efectivo BS">Efectivo Bs</SelectItem>
+                        <SelectItem value="Efectivo USD">Efectivo USD</SelectItem>
+                        <SelectItem value="Efectivo BS">Efectivo BS</SelectItem>
                         <SelectItem value="Tarjeta">Tarjeta</SelectItem>
                         <SelectItem value="Transferencia">Transferencia</SelectItem>
                         <SelectItem value="Pago Móvil">Pago Móvil</SelectItem>
