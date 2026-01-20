@@ -113,9 +113,11 @@ export default function LoginScreen() {
               <Button onClick={() => handleRoleSelect('admin')} className="w-full" size="lg">
                 <UserCog className="mr-2 h-5 w-5" /> Administrador
               </Button>
-              <Button onClick={() => handleRoleSelect('recepcionista')} className="w-full" size="lg">
-                <User className="mr-2 h-5 w-5" /> Recepcionista
-              </Button>
+              {selectedLocation !== 'PSYFN' && (
+                <Button onClick={() => handleRoleSelect('recepcionista')} className="w-full" size="lg">
+                  <User className="mr-2 h-5 w-5" /> Recepcionista
+                </Button>
+              )}
               <Button variant="link" onClick={resetState} className="w-full">
                 Cambiar de sede
               </Button>
