@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Service, Product } from '@/lib/types';
 import { useAppState } from '@/hooks/use-app-state';
+import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Edit, Plus, Scissors, Package, Trash2, Sandwich, Gamepad2 } from 'lucide-react';
@@ -86,9 +87,13 @@ export function ServicesTable() {
 
 export function ProductsTable() {
   const { products, openModal, addOrEdit, handleDelete } = useAppState();
+  const { location } = useAuth();
   const [itemToDelete, setItemToDelete] = useState<{id: string; name: string} | null>(null);
   
-  const regularProducts = products.filter(p => p.category !== 'Snack');
+  const isPlant = location === 'PSYFN';
+  const regularProducts = isPlant
+    ? products
+    : products.filter(p => p.category !== 'Snack');
 
   const openProductModal = (product: Product | null = null) => {
     openModal(
