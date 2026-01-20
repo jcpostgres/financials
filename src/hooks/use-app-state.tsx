@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import type { 
-  Service, Product, Staff, Customer, Transaction, Expense, ActiveTicket, AppSettings, TicketItem 
+  Service, Product, Staff, Customer, Transaction, Expense, ActiveTicket, AppSettings, TicketItem, OtherIncome 
 } from '@/lib/types';
 import { mockServices, mockProducts, mockStaff, mockCustomers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,7 @@ interface LocationData {
   customers: Customer[];
   transactions: Transaction[];
   expenses: Expense[];
+  otherIncomes: OtherIncome[];
   barberTurnQueue: string[];
   activeTickets: ActiveTicket[];
   appSettings: AppSettings;
@@ -54,6 +55,7 @@ const initialLocationData: LocationData = {
   customers: mockCustomers,
   transactions: [],
   expenses: [],
+  otherIncomes: [],
   barberTurnQueue: ['s1'],
   activeTickets: [],
   appSettings: { bcvRate: 36.5 },
@@ -131,10 +133,10 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
             toast({ title: "Éxito", description: 'Elemento actualizado.', variant: "default" });
         } else {
             const newItem = { ...dataToSave, id: crypto.randomUUID() };
-            if (collectionName !== 'expenses' && collectionName !== 'transactions') {
+            if (collectionName !== 'expenses' && collectionName !== 'transactions' && collectionName !== 'otherIncomes') {
                 newItem.createdAt = new Date();
             }
-             if (collectionName === 'expenses') {
+             if (collectionName === 'expenses' || collectionName === 'otherIncomes') {
                 newItem.timestamp = new Date();
             }
             newCollection = [...collection, newItem];

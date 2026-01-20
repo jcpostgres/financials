@@ -57,6 +57,14 @@ export interface Expense {
   staffId?: string;
 }
 
+export interface OtherIncome {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  timestamp: Date;
+}
+
 export interface TicketItem {
   id: string;
   name:string;
