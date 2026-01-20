@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import type { 
-  Service, Product, Staff, Customer, Transaction, Expense, ActiveTicket, AppSettings, TicketItem, Withdrawal
+  Service, Product, Staff, Customer, Transaction, Expense, ActiveTicket, AppSettings, TicketItem, Withdrawal, DailyClose
 } from '@/lib/types';
 import { mockServices, mockProducts, mockStaff, mockCustomers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ interface LocationData {
   transactions: Transaction[];
   expenses: Expense[];
   withdrawals: Withdrawal[];
+  dailyCloses: DailyClose[];
   barberTurnQueue: string[];
   activeTickets: ActiveTicket[];
   appSettings: AppSettings;
@@ -44,6 +45,8 @@ interface AppState extends LocationData {
   finalizePayment: (ticket: ActiveTicket, paymentMethod: string, referenceNumber?: string) => void;
   // Settings
   updateBcvRate: (rate: number) => void;
+  // Cash Register
+  closeCashRegister: (summary: Omit<DailyClose, 'id' | 'location'>) => void;
 }
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
@@ -56,6 +59,7 @@ const initialLocationData: LocationData = {
   transactions: [],
   expenses: [],
   withdrawals: [],
+  dailyCloses: [],
   barberTurnQueue: ['s1'],
   activeTickets: [],
   appSettings: { bcvRate: 36.5 },
@@ -73,7 +77,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         const storedData = localStorage.getItem('nordicoAppData');
         if (storedData) {
           setAllData(JSON.parse(storedData, (key, value) => {
-            if (['startTime', 'endTime', 'timestamp', 'createdAt'].includes(key)) {
+            if (['startTime', 'endTime', 'timestamp', 'createdAt', 'date'].includes(key) && value) {
               return new Date(value);
             }
             return value;
@@ -318,6 +322,26 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     }));
     toast({ title: "Éxito", description: 'Tasa BCV actualizada.', variant: "default"});
   }, [toast, location]);
+  
+  const closeCashRegister = useCallback((summary: Omit<DailyClose, 'id' | 'location'>) => {
+    if (!location) return;
+
+    const newClose: DailyClose = {
+        id: crypto.randomUUID(),
+        location: location,
+        ...summary,
+    };
+
+    updateCurrentLocationData(prev => ({
+        ...prev,
+        dailyCloses: [...(prev.dailyCloses || []), newClose],
+    }));
+
+    toast({
+        title: 'Cierre de Caja Realizado',
+        description: 'El resumen del día ha sido registrado.',
+    });
+}, [location, toast]);
 
   const value: AppState = {
     ...currentLocationData,
@@ -334,7 +358,8 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     startService,
     addItemToTicket,
     finalizePayment,
-    updateBcvRate
+    updateBcvRate,
+    closeCashRegister
   };
 
   return (

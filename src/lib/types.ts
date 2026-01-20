@@ -87,3 +87,14 @@ export interface ActiveTicket {
 export interface AppSettings {
   bcvRate: number;
 }
+
+export interface DailyClose {
+  id: string;
+  date: Date;
+  location: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netProfit: number;
+  transactions: Transaction[];
+  expenses: Expense[];
+}

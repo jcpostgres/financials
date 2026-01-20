@@ -109,16 +109,12 @@ function WithdrawalForm({ onSave }: { onSave: (data: any) => void }) {
 }
 
 export default function CashRegisterPage() {
-  const { transactions, expenses, customers, appSettings, withdrawals, openModal, addOrEdit, handleDelete } = useAppState();
+  const { transactions, expenses, customers, appSettings, withdrawals, openModal, addOrEdit, handleDelete, closeCashRegister } = useAppState();
   const { toast } = useToast();
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [withdrawalToDelete, setWithdrawalToDelete] = useState<Withdrawal | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
-
-  const handleCashClose = () => {
-    toast({ title: 'Cierre de Caja Realizado', description: 'El resumen del día ha sido registrado (simulado).' });
-  };
   
   const handleWithdrawal = () => {
     openModal(
@@ -218,6 +214,19 @@ export default function CashRegisterPage() {
     acc[tx.paymentMethod] = (acc[tx.paymentMethod] || 0) + tx.totalAmount;
     return acc;
   }, {} as Record<string, number>);
+  
+  const handleCashClose = () => {
+    const closeSummary = {
+        date: new Date(),
+        totalIncome: totalIncome,
+        totalExpenses: totalExpenses,
+        netProfit: netProfit,
+        transactions: filteredTransactions,
+        expenses: filteredExpenses,
+    };
+    closeCashRegister(closeSummary);
+    setFilterPreset('today');
+  };
 
   return (
     <div>

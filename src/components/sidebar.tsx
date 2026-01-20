@@ -48,6 +48,7 @@ const adminViews = [
   { href: '/reports', label: 'Ingresos', icon: TrendingUp, group: 'Finanzas' },
   { href: '/cash-register', label: 'Control de Caja', icon: Key, group: 'Finanzas' },
   { href: '/ganancia', label: 'Ganancia', icon: BadgeDollarSign, group: 'Finanzas' },
+  { href: '/reports/daily-closes', label: 'Cierres Diarios', icon: ClipboardList, group: 'Finanzas' },
 ];
 
 const receptionistViews = [
@@ -65,6 +66,7 @@ const psyfnViews = [
     { href: '/expenses', label: 'GASTOS', group: 'Planta', icon: Wallet},
     { href: '/reports', label: 'INGRESOS', group: 'Planta', icon: TrendingUp},
     { href: '/ganancia', label: 'GANANCIAS', group: 'Planta', icon: BadgeDollarSign},
+    { href: '/reports/daily-closes', label: 'CIERRES DIARIOS', group: 'Planta', icon: ClipboardList},
     { href: '/staff', label: 'Personal', icon: Users, group: 'Gestión' },
     { href: '/customers', label: 'Clientes', icon: Scissors, group: 'Gestión' },
     { href: '/inventory', label: 'Inventario', icon: Package, group: 'Gestión' },
