@@ -17,6 +17,7 @@ import type { Transaction, Withdrawal, Expense } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { IncomeForm } from '@/app/(app)/reports/income-form';
+import { useAuth } from '@/hooks/use-auth';
 
 
 function PaymentMethodTransactionsDialog({ method, amount, transactions, bcvRate }: { method: string, amount: number, transactions: Transaction[], bcvRate: number }) {
@@ -111,6 +112,7 @@ function WithdrawalForm({ onSave }: { onSave: (data: any) => void }) {
 export default function CashRegisterPage() {
   const { transactions, expenses, customers, appSettings, withdrawals, openModal, addOrEdit, handleDelete, closeCashRegister } = useAppState();
   const { toast } = useToast();
+  const { role } = useAuth();
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [withdrawalToDelete, setWithdrawalToDelete] = useState<Withdrawal | null>(null);
@@ -208,7 +210,7 @@ export default function CashRegisterPage() {
   const cashBalanceUSD = totalCashUSD - totalWithdrawalsUSD;
   const cashBalanceBS = totalCashBS - totalWithdrawalsBS;
 
-  const allPaymentMethods = ['Efectivo BS', 'Efectivo USD', 'Tarjeta', 'Transferencia', 'Pago Móvil'];
+  const allPaymentMethods = ['Efectivo BS', 'Efectivo USD', 'Tarjeta', 'Transferencia', 'Pago Móvil', 'Mixto'];
 
   const incomeByPaymentMethod = filteredTransactions.reduce((acc, tx) => {
     acc[tx.paymentMethod] = (acc[tx.paymentMethod] || 0) + tx.totalAmount;
@@ -258,7 +260,7 @@ export default function CashRegisterPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className={`grid grid-cols-1 ${role === 'admin' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4 mb-6`}>
         <Card>
           <CardHeader><CardTitle>Ingresos</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold text-green-400">{formatCurrency(totalIncome)}</CardContent>
@@ -267,10 +269,12 @@ export default function CashRegisterPage() {
           <CardHeader><CardTitle>Gastos</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold text-red-400">{formatCurrency(totalExpenses)}</CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle>Ganancia Neta</CardTitle></CardHeader>
-          <CardContent className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatCurrency(netProfit)}</CardContent>
-        </Card>
+        {role === 'admin' && (
+            <Card>
+                <CardHeader><CardTitle>Ganancia Neta</CardTitle></CardHeader>
+                <CardContent className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatCurrency(netProfit)}</CardContent>
+            </Card>
+        )}
       </div>
 
        <Card className="mb-6">
