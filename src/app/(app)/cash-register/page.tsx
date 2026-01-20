@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Transaction, Withdrawal } from '@/lib/types';
+import type { Transaction, Withdrawal, Expense } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 
@@ -156,7 +156,7 @@ export default function CashRegisterPage() {
   };
 
   const filterByDate = (items: (Transaction | Expense | Withdrawal)[], dateKey: 'endTime' | 'timestamp') => {
-     return items.filter(item => {
+     return (items || []).filter(item => {
         if (!startDate && !endDate) return true;
         const itemDate = item[dateKey] as Date;
         const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
