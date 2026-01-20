@@ -27,20 +27,22 @@ export default function LoginScreen() {
   const handleLocationSelect = (selectedLocation: Location) => {
     setLocation(selectedLocation);
     if (selectedLocation === 'PSYFN') {
-        handleRoleSelect('admin');
+        handleRoleSelect('admin', selectedLocation);
     } else {
         setStep('role');
     }
   };
 
-  const handleRoleSelect = (role: Role) => {
-    if (!location) return;
-    login(role, location);
+  const handleRoleSelect = (role: Role, selectedLocation?: Location) => {
+    const loginLocation = selectedLocation || location;
+    if (!loginLocation) return;
+    
+    login(role, loginLocation);
     toast({
       title: 'Éxito',
       description: `Inicio de sesión como ${
         role === 'admin' ? 'Administrador' : 'Recepcionista'
-      } en ${location}.`,
+      } en ${loginLocation}.`,
     });
   };
 
