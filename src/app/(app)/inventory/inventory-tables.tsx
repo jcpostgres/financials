@@ -93,7 +93,7 @@ export function ProductsTable() {
   const isPlant = location === 'PSYFN';
   const regularProducts = isPlant
     ? products
-    : products.filter(p => p.category !== 'Snack');
+    : products.filter(p => !['Snack', 'Cortesía', 'Snack de Cortesía'].includes(p.category));
 
   const openProductModal = (product: Product | null = null) => {
     openModal(
