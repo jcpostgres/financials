@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState } from 'react';
@@ -12,9 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
-import { Percent, Landmark, Crown, Handshake, Building, User, Users } from 'lucide-react';
+import { Percent, Landmark, Crown, Handshake, Building, User } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { redirect } from 'next/navigation';
 
 function LocationProfitCard({ title, netProfit }: { title: string, netProfit: number }) {
   const localProfit = netProfit * 0.5;
@@ -115,36 +112,18 @@ function PlantProfitCard({ plantProfit }: { plantProfit: number }) {
 
 export default function GananciaPage() {
   const { location } = useAuth();
-  const state = useAppState();
+  const { transactions, products, expenses } = useAppState();
 
-  if (location !== 'PSYFN' && location !== 'MAGALLANES' && location !== 'SARRIAS') {
-    // Or a loading spinner
-    return null;
-  }
-  
-  if (location === 'PSYFN') {
-    // Redirect or render PSYFN specific component
-    const { transactions, expenses } = useAppState();
-    const totalIncome = transactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
-    const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const netProfit = totalIncome - totalExpenses;
-
-     return (
-        <div className="space-y-6">
-            <PageHeader title="Ganancias de Planta" description="Distribución de ganancias para la planta y socios." />
-            <PlantProfitCard plantProfit={netProfit} />
-        </div>
-    );
-  }
-
-  // Regular location view
-  const { transactions, products, expenses } = state;
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
+  if (location !== 'PSYFN' && location !== 'MAGALLANES' && location !== 'SARRIAS') {
+    return null;
+  }
+  
   const setFilterPreset = (preset: 'today' | 'month' | 'year') => {
     const today = new Date();
     let start, end;
@@ -172,7 +151,6 @@ export default function GananciaPage() {
     return true;
   });
 
-  // Monthly or Annual calculations for profit distribution
   const isAnnual = selectedMonth === -1;
   const periodStart = isAnnual ? new Date(selectedYear, 0, 1) : new Date(selectedYear, selectedMonth, 1);
   const periodEnd = isAnnual ? new Date(selectedYear, 11, 31, 23, 59, 59, 999) : new Date(new Date(selectedYear, selectedMonth + 1, 0).setHours(23, 59, 59, 999));
@@ -189,7 +167,7 @@ export default function GananciaPage() {
 
   const periodTotalIncome = periodTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
   const periodTotalExpensesValue = periodExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const netProfit = periodTotalIncome - periodTotalExpensesValue;
+  const periodNetProfit = periodTotalIncome - periodTotalExpensesValue;
   
   const earningsByItem = filteredTransactions
     .flatMap(tx => tx.items)
@@ -218,14 +196,17 @@ export default function GananciaPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="GANANCIAS TOTALES" description="Detalle de rentabilidad por cada producto y servicio vendido." />
+      <PageHeader 
+        title={location === 'PSYFN' ? "Ganancias de Planta" : "GANANCIAS TOTALES"}
+        description={location === 'PSYFN' ? "Distribución de ganancias para la planta y socios." : "Detalle de rentabilidad por cada producto y servicio vendido."} 
+      />
       
        <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="flex items-center gap-2 text-xl"><Percent /> Distribución de Ganancia Neta</CardTitle>
-              <CardDescription>Basado en una ganancia neta de {formatCurrency(netProfit)} para {periodLabel}.</CardDescription>
+              <CardDescription>Basado en una ganancia neta de {formatCurrency(periodNetProfit)} para {periodLabel}.</CardDescription>
             </div>
             <div className="flex gap-2">
                 <Select value={String(selectedMonth)} onValueChange={(val) => setSelectedMonth(Number(val))}>
@@ -249,7 +230,11 @@ export default function GananciaPage() {
           </div>
         </CardHeader>
         <CardContent>
-            <LocationProfitCard title={`Distribución para ${location}`} netProfit={netProfit}/>
+            {location === 'PSYFN' ? (
+                <PlantProfitCard plantProfit={periodNetProfit} />
+            ) : (
+                <LocationProfitCard title={`Distribución para ${location}`} netProfit={periodNetProfit}/>
+            )}
         </CardContent>
       </Card>
 
@@ -301,5 +286,3 @@ export default function GananciaPage() {
     </div>
   );
 }
-
-    
