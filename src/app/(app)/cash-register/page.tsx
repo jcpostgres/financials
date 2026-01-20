@@ -158,9 +158,13 @@ export default function CashRegisterPage() {
   const filterByDate = (items: (Transaction | Expense | Withdrawal)[], dateKey: 'endTime' | 'timestamp') => {
      return (items || []).filter(item => {
         if (!startDate && !endDate) return true;
+        
         const itemDate = item[dateKey] as Date;
-        const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
-        const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
+        if (!itemDate) return false;
+
+        const start = startDate ? new Date(startDate + "T00:00:00") : null;
+        const end = endDate ? new Date(endDate + "T23:59:59.999") : null;
+        
         if (start && itemDate < start) return false;
         if (end && itemDate > end) return false;
         return true;
@@ -169,7 +173,7 @@ export default function CashRegisterPage() {
 
   const filteredTransactions = filterByDate(transactions, 'endTime') as Transaction[];
   const filteredExpenses = filterByDate(expenses, 'timestamp') as Expense[];
-  const filteredWithdrawals = filterByDate(withdrawals, 'timestamp') as Withdrawal[];
+  const filteredWithdrawals = filterByDate(withdrawals || [], 'timestamp') as Withdrawal[];
 
   const totalIncome = filteredTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
