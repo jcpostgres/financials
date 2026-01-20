@@ -27,7 +27,7 @@ function LocationProfitCard({ title, netProfit }: { title: string, netProfit: nu
         <CardTitle className="text-xl">{title}</CardTitle>
         <CardDescription>Ganancia Neta del Período: {formatCurrency(netProfit)}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-muted/30">
             <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2"><Landmark/> Ganancia Local (50%)</CardTitle>
