@@ -10,39 +10,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
-import type { OtherIncome } from '@/lib/types';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { IncomeForm } from './income-form';
-import { ConfirmDialog } from '@/components/common/confirm-dialog';
-import { Badge } from '@/components/ui/badge';
 
 
 export default function ReportsPage() {
-  const { transactions, otherIncomes, openModal, addOrEdit, handleDelete } = useAppState();
+  const { transactions, openModal, addOrEdit } = useAppState();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [incomeToDelete, setIncomeToDelete] = useState<OtherIncome | null>(null);
 
-  const openIncomeModal = (income: OtherIncome | null = null) => {
+  const openIncomeModal = () => {
     openModal(
       <IncomeForm
-        isEditing={!!income}
-        onSave={(data) => addOrEdit('otherIncomes', data, income?.id)}
-        initialData={income}
+        onSave={(data) => addOrEdit('transactions', data)}
       />,
-      income ? 'Editar Ingreso' : 'Registrar Ingreso'
+      'Registrar Ingreso Manual'
     );
-  };
-  
-  const confirmDelete = (income: OtherIncome) => {
-    setIncomeToDelete(income);
-  };
-
-  const onConfirmDelete = () => {
-    if (incomeToDelete) {
-      handleDelete('otherIncomes', incomeToDelete.id);
-      setIncomeToDelete(null);
-    }
   };
 
   const filteredTransactions = transactions.filter(tx => {
@@ -54,16 +37,6 @@ export default function ReportsPage() {
     if (end && txDate > end) return false;
     return true;
   });
-
-  const filteredOtherIncomes = (otherIncomes || []).filter(income => {
-    if (!startDate && !endDate) return true;
-    const incomeDate = income.timestamp;
-    const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
-    const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
-    if (start && incomeDate < start) return false;
-    if (end && incomeDate > end) return false;
-    return true;
-  }).sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   const incomeByCategories = filteredTransactions
     .flatMap(tx => tx.items)
@@ -85,10 +58,6 @@ export default function ReportsPage() {
       
       return acc;
     }, {} as Record<string, number>);
-
-    filteredOtherIncomes.forEach(income => {
-      incomeByCategories[income.category] = (incomeByCategories[income.category] || 0) + income.amount;
-  });
     
   const totalCategoryIncome = Object.values(incomeByCategories).reduce((sum, amount) => sum + amount, 0);
 
@@ -166,46 +135,7 @@ export default function ReportsPage() {
             </Table>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader><CardTitle>Otros Ingresos Registrados</CardTitle></CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead>Monto</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOtherIncomes.length > 0 ? filteredOtherIncomes.map(e => (
-                  <TableRow key={e.id}>
-                    <TableCell>{e.timestamp.toLocaleDateString()}</TableCell>
-                    <TableCell className="font-medium">{e.description}</TableCell>
-                    <TableCell><Badge variant="secondary">{e.category}</Badge></TableCell>
-                    <TableCell>{formatCurrency(e.amount)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => confirmDelete(e)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )) : <TableRow><TableCell colSpan={5} className="text-center">No hay otros ingresos para el período seleccionado.</TableCell></TableRow>}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
       </div>
-      <ConfirmDialog
-        isOpen={!!incomeToDelete}
-        onClose={() => setIncomeToDelete(null)}
-        onConfirm={onConfirmDelete}
-        title="Confirmar Eliminación"
-        description={`¿Está seguro de que desea eliminar el ingreso "${incomeToDelete?.description}"?`}
-      />
     </>
   );
 }

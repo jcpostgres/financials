@@ -37,7 +37,7 @@ export interface Customer {
 export interface Transaction {
   id: string;
   customerId: string;
-  barberId: string;
+  barberId?: string;
   items: TicketItem[];
   totalAmount: number;
   paymentMethod: string;
@@ -55,14 +55,6 @@ export interface Expense {
   category: string;
   timestamp: Date;
   staffId?: string;
-}
-
-export interface OtherIncome {
-  id: string;
-  description: string;
-  amount: number;
-  category: string;
-  timestamp: Date;
 }
 
 export interface TicketItem {
