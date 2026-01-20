@@ -123,25 +123,28 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           }
       });
 
-    updateCurrentLocationData(prev => {
-        const collection = prev[collectionName] as any[];
-        let newCollection;
-        if (id) {
-            newCollection = collection.map(item => item.id === id ? { ...item, ...dataToSave } : item);
-            toast({ title: "Éxito", description: 'Elemento actualizado.', variant: "default" });
-        } else {
+    if (id) {
+        updateCurrentLocationData(prev => {
+            const collection = prev[collectionName] as any[];
+            const newCollection = collection.map(item => item.id === id ? { ...item, ...dataToSave } : item);
+            return { ...prev, [collectionName]: newCollection };
+        });
+        toast({ title: "Éxito", description: 'Elemento actualizado.', variant: "default" });
+    } else {
+        updateCurrentLocationData(prev => {
+            const collection = prev[collectionName] as any[];
             const newItem = { ...dataToSave, id: crypto.randomUUID() };
             if (collectionName !== 'expenses' && collectionName !== 'transactions') {
                 newItem.createdAt = new Date();
             }
-             if (collectionName === 'expenses') {
+            if (collectionName === 'expenses') {
                 newItem.timestamp = new Date();
             }
-            newCollection = [...collection, newItem];
-            toast({ title: "Éxito", description: 'Elemento agregado.', variant: "default" });
-        }
-        return { ...prev, [collectionName]: newCollection };
-    });
+            const newCollection = [...collection, newItem];
+            return { ...prev, [collectionName]: newCollection };
+        });
+        toast({ title: "Éxito", description: 'Elemento agregado.', variant: "default" });
+    }
     
     closeModal();
   };
@@ -150,9 +153,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     updateCurrentLocationData(prev => {
       const collection = prev[collectionName] as any[];
       const newCollection = collection.filter(item => item.id !== id);
-      toast({ title: "Éxito", description: 'Elemento eliminado.', variant: "default" });
       return { ...prev, [collectionName]: newCollection };
     });
+    toast({ title: "Éxito", description: 'Elemento eliminado.', variant: "default" });
     closeModal();
   };
 
@@ -161,14 +164,19 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       toast({ title: "Error", description: 'Seleccione un barbero.', variant: "destructive"});
       return;
     }
-    updateCurrentLocationData(prev => {
-      if (prev.barberTurnQueue.includes(barberId)) {
+
+    const currentQueue = (allData[location!] || initialLocationData).barberTurnQueue;
+
+    if (currentQueue.includes(barberId)) {
         toast({ title: "Información", description: 'Este barbero ya está en la cola.', variant: "default"});
-        return prev;
-      }
-      toast({ title: "Éxito", description: 'Barbero añadido a la cola.', variant: "default"});
+        return;
+    }
+      
+    updateCurrentLocationData(prev => {
       return { ...prev, barberTurnQueue: [...prev.barberTurnQueue, barberId] };
     });
+
+    toast({ title: "Éxito", description: 'Barbero añadido a la cola.', variant: "default"});
     closeModal();
   };
 
@@ -184,9 +192,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     updateCurrentLocationData(prev => {
         const newQueue = prev.barberTurnQueue.filter(id => id !== barberId);
         newQueue.push(barberId);
-        toast({ title: "Turno Finalizado", description: 'El barbero ha sido movido al final de la cola.', variant: "default"});
         return { ...prev, barberTurnQueue: newQueue };
     });
+    toast({ title: "Turno Finalizado", description: 'El barbero ha sido movido al final de la cola.', variant: "default"});
   };
 
   const clearBarberQueue = () => {
@@ -199,21 +207,18 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           const currentIndex = prev.barberTurnQueue.indexOf(barberId);
           if (currentIndex === -1) return prev;
 
-          let newIndex;
-          if (direction === 'up') {
-              newIndex = Math.max(0, currentIndex - 1);
-          } else {
-              newIndex = Math.min(prev.barberTurnQueue.length - 1, currentIndex + 1);
-          }
+          const newIndex = direction === 'up'
+              ? Math.max(0, currentIndex - 1)
+              : Math.min(prev.barberTurnQueue.length - 1, currentIndex + 1);
 
           if (newIndex === currentIndex) return prev;
 
           const newQueue = [...prev.barberTurnQueue];
           const [movedBarber] = newQueue.splice(currentIndex, 1);
           newQueue.splice(newIndex, 0, movedBarber);
-          toast({ title: "Éxito", description: 'Cola de barberos actualizada.', variant: "default"});
           return { ...prev, barberTurnQueue: newQueue };
       });
+      toast({ title: "Éxito", description: 'Cola de barberos actualizada.', variant: "default"});
   };
 
   const startService = (customerId: string, barberId: string, items: TicketItem[], totalAmount: number) => {
@@ -252,9 +257,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           }
           return ticket;
       });
-      toast({ title: "Éxito", description: `${item.name} añadido al ticket.`, variant: "default"});
       return { ...prev, activeTickets: newActiveTickets };
     });
+    toast({ title: "Éxito", description: `${item.name} añadido al ticket.`, variant: "default"});
     closeModal();
   };
 
@@ -282,12 +287,10 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         return p;
       });
 
-      const newBarberTurnQueue = prev.barberTurnQueue;
+      const newBarberTurnQueue = [...prev.barberTurnQueue];
       if (ticket.barberId && !newBarberTurnQueue.includes(ticket.barberId)) {
         newBarberTurnQueue.push(ticket.barberId);
       }
-      
-      toast({ title: "Éxito", description: 'Venta finalizada y registrada.', variant: "default"});
       
       return {
         ...prev,
@@ -297,6 +300,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         barberTurnQueue: newBarberTurnQueue
       };
     });
+    toast({ title: "Éxito", description: 'Venta finalizada y registrada.', variant: "default"});
     closeModal();
   };
 
