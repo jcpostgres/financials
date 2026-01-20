@@ -86,6 +86,7 @@ export interface ActiveTicket {
 
 export interface AppSettings {
   bcvRate: number;
+  password?: string;
 }
 
 export interface DailyClose {

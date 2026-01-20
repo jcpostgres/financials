@@ -31,8 +31,8 @@ interface AppState extends LocationData {
   openModal: (content: ReactNode, title: string) => void;
   closeModal: () => void;
   // CRUD
-  addOrEdit: (collectionName: keyof Omit<LocationData, 'appSettings'>, data: any, id?: string) => void;
-  handleDelete: (collectionName: keyof Omit<LocationData, 'appSettings'>, id: string) => void;
+  addOrEdit: (collectionName: keyof Omit<LocationData, 'appSettings' | 'barberTurnQueue' | 'activeTickets'>, data: any, id?: string) => void;
+  handleDelete: (collectionName: keyof Omit<LocationData, 'appSettings' | 'barberTurnQueue' | 'activeTickets'>, id: string) => void;
   // Queue Logic
   addBarberToQueue: (barberId: string) => void;
   removeBarberFromQueue: (barberId: string) => void;
@@ -45,6 +45,7 @@ interface AppState extends LocationData {
   finalizePayment: (ticket: ActiveTicket, paymentMethod: string, referenceNumber?: string) => void;
   // Settings
   updateBcvRate: (rate: number) => void;
+  updatePassword: (password: string) => void;
   // Cash Register
   closeCashRegister: (summary: Omit<DailyClose, 'id' | 'location'>) => void;
 }
@@ -62,7 +63,7 @@ const initialLocationData: LocationData = {
   dailyCloses: [],
   barberTurnQueue: ['s1'],
   activeTickets: [],
-  appSettings: { bcvRate: 36.5 },
+  appSettings: { bcvRate: 36.5, password: 'ADMI14' },
 };
 
 export const AppStateProvider = ({ children }: { children: ReactNode }) => {
@@ -76,12 +77,19 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       try {
         const storedData = localStorage.getItem('nordicoAppData');
         if (storedData) {
-          setAllData(JSON.parse(storedData, (key, value) => {
+          const parsedData = JSON.parse(storedData, (key, value) => {
             if (['startTime', 'endTime', 'timestamp', 'createdAt', 'date'].includes(key) && value) {
               return new Date(value);
             }
             return value;
-          }));
+          });
+          // Ensure default password if not present
+          Object.keys(parsedData).forEach(loc => {
+            if (!parsedData[loc].appSettings.password) {
+              parsedData[loc].appSettings.password = 'ADMI14';
+            }
+          });
+          setAllData(parsedData);
         }
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
@@ -90,7 +98,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && Object.keys(allData).length > 0) {
       try {
         localStorage.setItem('nordicoAppData', JSON.stringify(allData));
       } catch (error) {
@@ -100,8 +108,12 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   }, [allData, isLoggedIn]);
 
   const currentLocationData = useMemo(() => {
-    if (!location || !allData) return initialLocationData;
-    return allData[location] || initialLocationData;
+    if (!location) return initialLocationData;
+    const dataForLocation = allData[location] || initialLocationData;
+    if (!dataForLocation.appSettings.password) {
+        dataForLocation.appSettings.password = 'ADMI14';
+    }
+    return dataForLocation;
   }, [allData, location]);
   
   const updateCurrentLocationData = (updater: (prev: LocationData) => LocationData) => {
@@ -121,78 +133,80 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const openModal = (content: ReactNode, title: string) => setModal({ isOpen: true, content, title });
   const closeModal = () => setModal({ isOpen: false, content: null, title: '' });
 
-  const addOrEdit = useCallback((collectionName: keyof Omit<LocationData, 'appSettings'>, data: any, id?: string) => {
-    const dataToSave = { ...data };
-      Object.keys(dataToSave).forEach(key => {
-          if (['price', 'cost', 'stock', 'rentAmount', 'commissionPercentage', 'amount', 'monthlyPayment'].includes(key)) {
-              dataToSave[key] = Number(dataToSave[key] || 0);
-          }
-      });
-
+  const addOrEdit = useCallback((collectionName: keyof Omit<LocationData, 'appSettings' | 'barberTurnQueue' | 'activeTickets'>, data: any, id?: string) => {
     let successMessage = '';
-    if (id) {
-        updateCurrentLocationData(prev => {
-            const collection = prev[collectionName] as any[];
-            const newCollection = collection.map(item => item.id === id ? { ...item, ...dataToSave } : item);
-            return { ...prev, [collectionName]: newCollection };
+
+    const processData = (currentData: LocationData): LocationData => {
+        const dataToSave = { ...data };
+        Object.keys(dataToSave).forEach(key => {
+            if (['price', 'cost', 'stock', 'rentAmount', 'commissionPercentage', 'amount', 'monthlyPayment'].includes(key)) {
+                dataToSave[key] = Number(dataToSave[key] || 0);
+            }
         });
-        successMessage = 'Elemento actualizado.';
-    } else {
-        updateCurrentLocationData(prev => {
-            const collection = prev[collectionName] as any[];
+
+        let updatedCollection;
+        if (id) {
+            updatedCollection = (currentData[collectionName] as any[]).map(item => item.id === id ? { ...item, ...dataToSave } : item);
+            successMessage = 'Elemento actualizado.';
+        } else {
             const newItem = { ...dataToSave, id: crypto.randomUUID() };
              if (collectionName === 'expenses' || collectionName === 'withdrawals') {
                 newItem.timestamp = new Date();
             } else if (collectionName !== 'transactions') {
                 newItem.createdAt = new Date();
             }
-            const newCollection = [...collection, newItem];
-            return { ...prev, [collectionName]: newCollection };
-        });
-        successMessage = 'Elemento agregado.';
-    }
-    
+            updatedCollection = [...(currentData[collectionName] as any[]), newItem];
+            successMessage = 'Elemento agregado.';
+        }
+        return { ...currentData, [collectionName]: updatedCollection };
+    };
+
+    updateCurrentLocationData(processData);
     closeModal();
-    toast({ title: "Éxito", description: successMessage, variant: "default" });
+    toast({ title: "Éxito", description: successMessage });
   }, [toast, location]);
   
-  const handleDelete = useCallback((collectionName: keyof Omit<LocationData, 'appSettings'>, id: string) => {
-    updateCurrentLocationData(prev => {
-      const collection = prev[collectionName] as any[];
-      const newCollection = collection.filter(item => item.id !== id);
-      return { ...prev, [collectionName]: newCollection };
-    });
+  const handleDelete = useCallback((collectionName: keyof Omit<LocationData, 'appSettings' | 'barberTurnQueue' | 'activeTickets'>, id: string) => {
+    let successMessage = 'Elemento eliminado.';
+    const processData = (currentData: LocationData): LocationData => {
+        const updatedCollection = (currentData[collectionName] as any[]).filter(item => item.id !== id);
+        return { ...currentData, [collectionName]: updatedCollection };
+    };
+    updateCurrentLocationData(processData);
     closeModal();
-    toast({ title: "Éxito", description: 'Elemento eliminado.', variant: "default" });
+    toast({ title: "Éxito", description: successMessage });
   }, [toast, location]);
 
   const addBarberToQueue = useCallback((barberId: string) => {
     if (!barberId) {
-      toast({ title: "Error", description: 'Seleccione un barbero.', variant: "destructive"});
-      return;
-    }
-
-    const currentQueue = (allData[location!] || initialLocationData).barberTurnQueue;
-
-    if (currentQueue.includes(barberId)) {
-        toast({ title: "Información", description: 'Este barbero ya está en la cola.', variant: "default"});
+        toast({ title: "Error", description: 'Seleccione un barbero.', variant: "destructive"});
         return;
     }
-      
-    updateCurrentLocationData(prev => {
-      return { ...prev, barberTurnQueue: [...prev.barberTurnQueue, barberId] };
-    });
 
-    closeModal();
-    toast({ title: "Éxito", description: 'Barbero añadido a la cola.', variant: "default"});
-  }, [toast, allData, location]);
+    let successMessage: string | null = null;
+    let variant: "default" | "destructive" = "default";
+    
+    updateCurrentLocationData(prev => {
+        if (prev.barberTurnQueue.includes(barberId)) {
+            successMessage = 'Este barbero ya está en la cola.';
+            return prev;
+        }
+        successMessage = 'Barbero añadido a la cola.';
+        return { ...prev, barberTurnQueue: [...prev.barberTurnQueue, barberId] };
+    });
+    
+    if (successMessage) {
+        closeModal();
+        toast({ title: "Información", description: successMessage, variant });
+    }
+  }, [toast, location]);
 
   const removeBarberFromQueue = useCallback((barberId: string) => {
      updateCurrentLocationData(prev => ({
         ...prev,
         barberTurnQueue: prev.barberTurnQueue.filter(id => id !== barberId)
      }));
-    toast({ title: "Éxito", description: 'Barbero removido de la cola.', variant: "default"});
+    toast({ title: "Éxito", description: 'Barbero removido de la cola.'});
   }, [toast, location]);
   
   const rotateBarberInQueue = useCallback((barberId: string) => {
@@ -201,12 +215,12 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         newQueue.push(barberId);
         return { ...prev, barberTurnQueue: newQueue };
     });
-    toast({ title: "Turno Finalizado", description: 'El barbero ha sido movido al final de la cola.', variant: "default"});
+    toast({ title: "Turno Finalizado", description: 'El barbero ha sido movido al final de la cola.'});
   }, [toast, location]);
 
   const clearBarberQueue = useCallback(() => {
     updateCurrentLocationData(prev => ({ ...prev, barberTurnQueue: [] }));
-    toast({ title: "Cola Limpiada", description: 'Se han eliminado todos los barberos de la cola.', variant: "default"});
+    toast({ title: "Cola Limpiada", description: 'Se han eliminado todos los barberos de la cola.'});
   }, [toast, location]);
   
   const moveBarberInQueue = useCallback((barberId: string, direction: 'up' | 'down') => {
@@ -225,7 +239,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           newQueue.splice(newIndex, 0, movedBarber);
           return { ...prev, barberTurnQueue: newQueue };
       });
-      toast({ title: "Éxito", description: 'Cola de barberos actualizada.', variant: "default"});
+      toast({ title: "Éxito", description: 'Cola de barberos actualizada.'});
   }, [toast, location]);
 
   const startService = useCallback((customerId: string, barberId: string, items: TicketItem[], totalAmount: number) => {
@@ -250,7 +264,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     }));
     
     closeModal();
-    toast({ title: "Éxito", description: 'Servicio iniciado.', variant: "default"});
+    toast({ title: "Éxito", description: 'Servicio iniciado.'});
   }, [toast, location]);
   
   const addItemToTicket = useCallback((ticketId: string, item: Service | Product, type: 'service' | 'product') => {
@@ -267,7 +281,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       return { ...prev, activeTickets: newActiveTickets };
     });
     closeModal();
-    toast({ title: "Éxito", description: `${item.name} añadido al ticket.`, variant: "default"});
+    toast({ title: "Éxito", description: `${item.name} añadido al ticket.`});
   }, [toast, location]);
 
   const finalizePayment = useCallback((ticket: ActiveTicket, paymentMethod: string, referenceNumber?: string) => {
@@ -308,7 +322,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       };
     });
     closeModal();
-    toast({ title: "Éxito", description: 'Venta finalizada y registrada.', variant: "default"});
+    toast({ title: "Éxito", description: 'Venta finalizada y registrada.'});
   }, [toast, location]);
 
   const updateBcvRate = useCallback((rate: number) => {
@@ -320,7 +334,19 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         appSettings: { ...prev.appSettings, bcvRate: rate }
     }));
-    toast({ title: "Éxito", description: 'Tasa BCV actualizada.', variant: "default"});
+    toast({ title: "Éxito", description: 'Tasa BCV actualizada.'});
+  }, [toast, location]);
+
+  const updatePassword = useCallback((password: string) => {
+    if (password.length < 4) {
+        toast({ title: 'Error', description: 'La contraseña debe tener al menos 4 caracteres.', variant: 'destructive' });
+        return;
+    }
+    updateCurrentLocationData(prev => ({
+        ...prev,
+        appSettings: { ...prev.appSettings, password }
+    }));
+    toast({ title: 'Éxito', description: 'Contraseña actualizada.' });
   }, [toast, location]);
   
   const closeCashRegister = useCallback((summary: Omit<DailyClose, 'id' | 'location'>) => {
@@ -359,6 +385,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     addItemToTicket,
     finalizePayment,
     updateBcvRate,
+    updatePassword,
     closeCashRegister
   };
 

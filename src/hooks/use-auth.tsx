@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     setRole(newRole);
     setLocation(newLocation);
-    router.push(newRole === 'admin' ? '/dashboard' : '/pos');
+    router.push(newRole === 'admin' ? '/dashboard' : '/turn-queue');
   }, [router]);
 
   const logout = useCallback(() => {
