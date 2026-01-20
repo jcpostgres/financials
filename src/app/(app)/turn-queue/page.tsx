@@ -12,11 +12,11 @@ export default function TurnQueuePage() {
   const { staff, barberTurnQueue, openModal, rotateBarberInQueue, moveBarberInQueue, clearBarberQueue, removeBarberFromQueue } = useAppState();
   const { toast } = useToast();
 
-  const allBarbers = staff.filter(s => s.role === 'barber' || s.role === 'head_barber');
+  const allBarbers = staff.filter(s => s.role.toLowerCase().includes('barber'));
 
   const openAddBarberToQueueModal = () => {
     if (allBarbers.length === 0) {
-      toast({ title: 'Atención', description: 'No hay barberos registrados. Vaya a "Personal" para añadirlos.', variant: 'destructive' });
+      toast({ title: 'Atención', description: 'No hay personal con rol de "Barbero". Vaya a "Personal" para añadirlos.', variant: 'destructive' });
       return;
     }
     openModal(<AddBarberToQueueContent />, 'Añadir Barbero a Cola');
@@ -51,7 +51,7 @@ export default function TurnQueuePage() {
         </CardHeader>
         <CardContent>
           {allBarbers.length === 0 ? (
-            <p className="text-destructive text-center py-4">¡Atención! No hay barberos registrados.</p>
+            <p className="text-destructive text-center py-4">¡Atención! No hay personal con rol de "Barbero" registrado.</p>
           ) : barberTurnQueue.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">No hay barberos en la cola. Añada uno para iniciar.</p>
           ) : (

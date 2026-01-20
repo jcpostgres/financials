@@ -5,7 +5,6 @@ import type { Staff } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface StaffFormProps {
   isEditing: boolean;
@@ -14,19 +13,15 @@ interface StaffFormProps {
 }
 
 export function StaffForm({ isEditing, onSave, initialData }: StaffFormProps) {
-  const [formData, setFormData] = useState(initialData || { role: 'barber' });
+  const [formData, setFormData] = useState(initialData || { role: '' });
 
   useEffect(() => {
-    setFormData(initialData || { name: '', role: 'barber' });
+    setFormData(initialData || { name: '', role: '' });
   }, [initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (value: string) => {
-    setFormData(prev => ({...prev, role: value as 'barber' | 'recepcionista' | 'limpieza' | 'head_barber'}));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,45 +30,39 @@ export function StaffForm({ isEditing, onSave, initialData }: StaffFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 p-6">
       <div className="space-y-2">
         <Label htmlFor="name">Nombre:</Label>
         <Input id="name" name="name" value={formData.name || ''} onChange={handleChange} required/>
       </div>
       <div className="space-y-2">
         <Label htmlFor="role">Rol:</Label>
-        <Select name="role" value={formData.role || 'barber'} onValueChange={handleSelectChange}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="barber">Barbero</SelectItem>
-            <SelectItem value="head_barber">Jefe de Barbero</SelectItem>
-            <SelectItem value="recepcionista">Recepcionista</SelectItem>
-            <SelectItem value="limpieza">Limpieza</SelectItem>
-          </SelectContent>
-        </Select>
+        <Input 
+          id="role"
+          name="role"
+          value={formData.role || ''}
+          onChange={handleChange}
+          placeholder="Ej: Barbero, Vendedor, Repartidor..."
+          required
+        />
       </div>
-      {(formData.role === 'barber' || formData.role === 'head_barber') && (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-             {formData.role === 'barber' &&
-                <div className="space-y-2">
-                    <Label htmlFor="rentAmount">Alquiler Semanal ($):</Label>
-                    <Input id="rentAmount" name="rentAmount" type="number" value={formData.rentAmount || ''} onChange={handleChange} />
-                </div>
-             }
-            <div className="space-y-2">
-              <Label htmlFor="commissionPercentage">{formData.role === 'head_barber' ? 'Comisión Fija (%)' : 'Comisión Base (%)'}</Label>
-              <Input id="commissionPercentage" name="commissionPercentage" type="number" value={formData.commissionPercentage || ''} onChange={handleChange} />
-            </div>
-          </div>
-        </>
-      )}
-      {(formData.role === 'recepcionista' || formData.role === 'limpieza') && (
+      
+      <div className="space-y-2">
+        <Label htmlFor="monthlyPayment">Pago Mensual ($):</Label>
+        <Input id="monthlyPayment" name="monthlyPayment" type="number" value={formData.monthlyPayment || ''} onChange={handleChange} />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="monthlyPayment">Pago Mensual ($):</Label>
-          <Input id="monthlyPayment" name="monthlyPayment" type="number" value={formData.monthlyPayment || ''} onChange={handleChange} />
+            <Label htmlFor="rentAmount">Alquiler Semanal ($):</Label>
+            <Input id="rentAmount" name="rentAmount" type="number" value={formData.rentAmount || ''} onChange={handleChange} />
         </div>
-      )}
+        <div className="space-y-2">
+          <Label htmlFor="commissionPercentage">Comisión (%)</Label>
+          <Input id="commissionPercentage" name="commissionPercentage" type="number" value={formData.commissionPercentage || ''} onChange={handleChange} />
+        </div>
+      </div>
+      
       <Button type="submit" className="w-full">{isEditing ? 'Actualizar Personal' : 'Agregar Personal'}</Button>
     </form>
   );

@@ -17,7 +17,7 @@ export function AddBarberToQueueContent() {
   const { staff, barberTurnQueue, addBarberToQueue } = useAppState();
   const [selectedBarberToAdd, setSelectedBarberToAdd] = useState('');
 
-  const allBarbers = staff.filter(s => s.role === 'barber' || s.role === 'head_barber');
+  const allBarbers = staff.filter(s => s.role.toLowerCase().includes('barber'));
   const availableBarbersForQueue = allBarbers.filter(s => !barberTurnQueue.includes(s.id));
 
   return (
@@ -25,7 +25,7 @@ export function AddBarberToQueueContent() {
       <div className="mb-4 space-y-2">
         <Label>Seleccionar Barbero para la cola:</Label>
         {allBarbers.length === 0 ? (
-          <p className="text-sm text-destructive italic">No hay barberos registrados. Vaya a "Personal" para añadirlos.</p>
+          <p className="text-sm text-destructive italic">No hay personal con rol de "Barbero" registrado.</p>
         ) : availableBarbersForQueue.length > 0 ? (
           <Select value={selectedBarberToAdd} onValueChange={setSelectedBarberToAdd}>
             <SelectTrigger><SelectValue placeholder="-- Seleccione un barbero --" /></SelectTrigger>

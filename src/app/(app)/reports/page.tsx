@@ -10,17 +10,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import type { Transaction } from '@/lib/types';
-import { BarberReports } from './barber-reports';
 
 type IncomeCategory = 'Servicio de Barberia' | 'Productos' | 'Snacks' | 'Zona Gamer';
 
 export default function ReportsPage() {
-  const { transactions, staff, products } = useAppState();
+  const { transactions } = useAppState();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [activeTab, setActiveTab] = useState<'barbers' | 'categories'>('barbers');
 
   const filteredTransactions = transactions.filter(tx => {
     if (!startDate && !endDate) return true;
@@ -75,13 +72,8 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reportes Detallados" description="Analiza el rendimiento de tus barberos y categorías." />
+      <PageHeader title="Reportes Detallados" description="Analiza el rendimiento de tus categorías." />
 
-      <div className="flex gap-2 mb-4">
-        <Button variant={activeTab === 'barbers' ? 'default' : 'outline'} onClick={() => setActiveTab('barbers')}>Barberos</Button>
-        <Button variant={activeTab === 'categories' ? 'default' : 'outline'} onClick={() => setActiveTab('categories')}>Categorías</Button>
-      </div>
-      
       <Card className="mb-6">
         <CardHeader><CardTitle>Filtro por Fecha</CardTitle></CardHeader>
         <CardContent>
@@ -98,49 +90,39 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
 
-      {activeTab === 'barbers' && (
-        <div className="animate-fade-in-up">
-           <BarberReports transactions={filteredTransactions} staff={staff} />
-        </div>
-      )}
-
-      {activeTab === 'categories' && (
-        <div className="animate-fade-in-up">
-          <Card>
-            <CardHeader><CardTitle>Ingresos por Categoría</CardTitle></CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead className="text-right">Ingresos</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(Object.keys(incomeByCategories) as IncomeCategory[]).length > 0 ? (
-                    (Object.keys(incomeByCategories) as IncomeCategory[]).sort().map(category => (
-                      <TableRow key={category}>
-                        <TableCell className="font-semibold">{category}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(incomeByCategories[category])}</TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow><TableCell colSpan={2} className="text-center">No hay ingresos por categoría.</TableCell></TableRow>
-                  )}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableHead className="font-bold">Total</TableHead>
-                    <TableHead className="text-right font-bold">{formatCurrency(totalCategoryIncome)}</TableHead>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <div className="animate-fade-in-up">
+        <Card>
+          <CardHeader><CardTitle>Ingresos por Categoría</CardTitle></CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead className="text-right">Ingresos</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(Object.keys(incomeByCategories) as IncomeCategory[]).length > 0 ? (
+                  (Object.keys(incomeByCategories) as IncomeCategory[]).sort().map(category => (
+                    <TableRow key={category}>
+                      <TableCell className="font-semibold">{category}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(incomeByCategories[category])}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow><TableCell colSpan={2} className="text-center">No hay ingresos por categoría para el período seleccionado.</TableCell></TableRow>
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableHead className="font-bold">Total</TableHead>
+                  <TableHead className="text-right font-bold">{formatCurrency(totalCategoryIncome)}</TableHead>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
-
-    

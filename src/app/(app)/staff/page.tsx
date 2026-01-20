@@ -67,18 +67,11 @@ export default function StaffPage() {
                       <Badge variant="outline" className="capitalize">{member.role.replace('_', ' ')}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {member.role === 'barber' && (
-                        `Comisión Semanal: 55%-65% (según volumen)`
-                      )}
-                      {member.role === 'head_berber' && (
-                         `Comisión Fija: ${member.commissionPercentage || 0}%`
-                      )}
-                       {member.role === 'barber' && member.rentAmount && (
-                        ` | Alquiler: ${formatCurrency(member.rentAmount)}`
-                      )}
-                      {(member.role === 'recepcionista' || member.role === 'limpieza') && (
-                        `Pago Mensual: ${formatCurrency(member.monthlyPayment)}`
-                      )}
+                       {[
+                        member.monthlyPayment ? `Pago Mensual: ${formatCurrency(member.monthlyPayment)}` : null,
+                        member.commissionPercentage ? `Comisión: ${member.commissionPercentage}%` : null,
+                        member.rentAmount ? `Alquiler: ${formatCurrency(member.rentAmount)}` : null
+                      ].filter(Boolean).join(' | ') || 'N/A'}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => openStaffModal(member)}>
