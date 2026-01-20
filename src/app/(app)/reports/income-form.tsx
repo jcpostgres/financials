@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppState } from '@/hooks/use-app-state';
 import type { Product, TicketItem, Transaction } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,11 @@ import { CustomerForm } from '@/app/(app)/customers/customer-form';
 
 interface ManualTransactionFormProps {
   onSave: (data: Partial<Transaction>) => void;
+  isEditing: boolean;
+  initialData: Partial<Transaction> | null;
 }
 
-export function IncomeForm({ onSave }: ManualTransactionFormProps) {
+export function IncomeForm({ onSave, isEditing, initialData }: ManualTransactionFormProps) {
     const { customers, products, openModal, addOrEdit } = useAppState();
     const { toast } = useToast();
     
@@ -28,6 +30,20 @@ export function IncomeForm({ onSave }: ManualTransactionFormProps) {
 
     const [selectedProduct, setSelectedProduct] = useState('');
     const [quantity, setQuantity] = useState(1);
+
+    useEffect(() => {
+        if (initialData) {
+            setCustomerId(initialData.customerId || '');
+            setItems(initialData.items || []);
+            setPaymentMethod(initialData.paymentMethod || '');
+            setReference(initialData.referenceNumber || '');
+        } else {
+            setCustomerId('');
+            setItems([]);
+            setPaymentMethod('');
+            setReference('');
+        }
+    }, [initialData]);
 
     const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -71,9 +87,11 @@ export function IncomeForm({ onSave }: ManualTransactionFormProps) {
             paymentMethod,
             referenceNumber: reference,
             status: 'completed',
-            startTime: new Date(),
-            endTime: new Date(),
-            recordedBy: 'manual',
+             ...( !isEditing && { 
+              startTime: new Date(),
+              endTime: new Date(),
+              recordedBy: 'manual'
+            })
         };
 
         onSave(transactionData);
@@ -173,7 +191,9 @@ export function IncomeForm({ onSave }: ManualTransactionFormProps) {
                 </div>
             )}
 
-            <Button onClick={handleSubmit} className="w-full">Registrar Ingreso</Button>
+            <Button onClick={handleSubmit} className="w-full">
+                {isEditing ? 'Actualizar Ingreso' : 'Registrar Ingreso'}
+            </Button>
         </div>
     )
 }

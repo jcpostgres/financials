@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +7,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Key, ArrowDownFromLine, Percent, Landmark, Crown, Handshake, Building, Trash2 } from 'lucide-react';
+import { Key, ArrowDownFromLine, Percent, Landmark, Crown, Handshake, Building, Trash2, Edit } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -17,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import type { Transaction, Withdrawal, Expense } from '@/lib/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
+import { IncomeForm } from '@/app/(app)/reports/income-form';
 
 
 function PaymentMethodTransactionsDialog({ method, amount, transactions, bcvRate }: { method: string, amount: number, transactions: Transaction[], bcvRate: number }) {
@@ -114,6 +114,7 @@ export default function CashRegisterPage() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [withdrawalToDelete, setWithdrawalToDelete] = useState<Withdrawal | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
 
   const handleCashClose = () => {
     toast({ title: 'Cierre de Caja Realizado', description: 'El resumen del día ha sido registrado (simulado).' });
@@ -126,14 +127,36 @@ export default function CashRegisterPage() {
     );
   };
   
-  const confirmDelete = (withdrawal: Withdrawal) => {
+  const openIncomeModal = (transaction: Transaction | null = null) => {
+    openModal(
+      <IncomeForm
+        isEditing={!!transaction}
+        onSave={(data) => addOrEdit('transactions', data, transaction?.id)}
+        initialData={transaction}
+      />,
+      transaction ? 'Editar Ingreso' : 'Registrar Ingreso'
+    );
+  };
+
+  const confirmDeleteWithdrawal = (withdrawal: Withdrawal) => {
     setWithdrawalToDelete(withdrawal);
   };
 
-  const onConfirmDelete = () => {
+  const onConfirmDeleteWithdrawal = () => {
     if (withdrawalToDelete) {
       handleDelete('withdrawals', withdrawalToDelete.id);
       setWithdrawalToDelete(null);
+    }
+  };
+
+  const confirmDeleteTransaction = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+  };
+
+  const onConfirmDeleteTransaction = () => {
+    if (transactionToDelete) {
+      handleDelete('transactions', transactionToDelete.id);
+      setTransactionToDelete(null);
     }
   };
 
@@ -293,7 +316,7 @@ export default function CashRegisterPage() {
                     <TableCell className="font-semibold">{w.currency === 'USD' ? formatCurrency(w.amount) : `Bs. ${w.amount.toFixed(2)}`}</TableCell>
                     <TableCell>{w.notes}</TableCell>
                     <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => confirmDelete(w)} className="text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="icon" onClick={() => confirmDeleteWithdrawal(w)} className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </TableCell>
@@ -335,6 +358,7 @@ export default function CashRegisterPage() {
                 <TableHead>Cliente</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Método</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -344,8 +368,22 @@ export default function CashRegisterPage() {
                   <TableCell>{customers.find(c => c.id === tx.customerId)?.name || 'N/A'}</TableCell>
                   <TableCell>{formatCurrency(tx.totalAmount)}</TableCell>
                   <TableCell><Badge variant="outline">{tx.paymentMethod}</Badge></TableCell>
+                  <TableCell className="text-right">
+                    {tx.recordedBy === 'manual' ? (
+                        <>
+                            <Button variant="ghost" size="icon" onClick={() => openIncomeModal(tx)}>
+                                <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => confirmDeleteTransaction(tx)} className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </>
+                    ) : (
+                        <Badge variant="secondary">POS</Badge>
+                    )}
+                </TableCell>
                 </TableRow>
-              )) : <TableRow><TableCell colSpan={4} className="text-center">No hay transacciones para el período.</TableCell></TableRow>}
+              )) : <TableRow><TableCell colSpan={5} className="text-center">No hay transacciones para el período.</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>
@@ -353,9 +391,16 @@ export default function CashRegisterPage() {
        <ConfirmDialog
         isOpen={!!withdrawalToDelete}
         onClose={() => setWithdrawalToDelete(null)}
-        onConfirm={onConfirmDelete}
+        onConfirm={onConfirmDeleteWithdrawal}
         title="Confirmar Eliminación"
         description={`¿Está seguro de que desea eliminar este retiro? Esta acción no se puede deshacer.`}
+      />
+       <ConfirmDialog
+        isOpen={!!transactionToDelete}
+        onClose={() => setTransactionToDelete(null)}
+        onConfirm={onConfirmDeleteTransaction}
+        title="Confirmar Eliminación"
+        description={`¿Está seguro de que desea eliminar esta transacción? Esta acción no se puede deshacer.`}
       />
     </div>
   );
