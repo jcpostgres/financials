@@ -18,31 +18,36 @@ type Location = 'MAGALLANES' | 'SARRIAS' | 'PSYFN';
 
 export default function LoginScreen() {
   const [step, setStep] = useState<'location' | 'role'>('location');
-  const [location, setLocation] = useState<Location | null>(
-    null
-  );
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const { login } = useAuth();
   const { toast } = useToast();
 
-  const handleLocationSelect = (selectedLocation: Location) => {
-    setLocation(selectedLocation);
-    if (selectedLocation === 'PSYFN') {
-        handleRoleSelect('admin', selectedLocation);
+  const handleLocationSelect = (location: Location) => {
+    setSelectedLocation(location);
+    if (location === 'PSYFN') {
+      handleRoleSelect('admin', location);
     } else {
-        setStep('role');
+      setStep('role');
     }
   };
 
-  const handleRoleSelect = (role: Role, selectedLocation?: Location) => {
-    const loginLocation = selectedLocation || location;
-    if (!loginLocation) return;
+  const handleRoleSelect = (role: Role, locationToLogin?: Location) => {
+    const finalLocation = locationToLogin || selectedLocation;
+    if (!finalLocation) {
+      toast({
+        title: 'Error',
+        description: 'No se ha seleccionado una sede.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
-    login(role, loginLocation);
+    login(role, finalLocation);
     toast({
       title: 'Éxito',
       description: `Inicio de sesión como ${
         role === 'admin' ? 'Administrador' : 'Recepcionista'
-      } en ${loginLocation}.`,
+      } en ${finalLocation}.`,
     });
   };
 
@@ -56,7 +61,7 @@ export default function LoginScreen() {
           <CardDescription>
             {step === 'location'
               ? 'Seleccione su sede para continuar'
-              : `Sede ${location}. Seleccione su rol:`}
+              : `Sede ${selectedLocation}. Seleccione su rol:`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,7 +95,7 @@ export default function LoginScreen() {
           ) : (
             <div className="space-y-4">
               <Button
-                onClick={() => handleRoleSelect('admin' as Role)}
+                onClick={() => handleRoleSelect('admin')}
                 className="w-full"
                 size="lg"
               >
@@ -98,7 +103,7 @@ export default function LoginScreen() {
                 Administrador
               </Button>
               <Button
-                onClick={() => handleRoleSelect('recepcionista' as Role)}
+                onClick={() => handleRoleSelect('recepcionista')}
                 className="w-full"
                 size="lg"
               >
@@ -107,7 +112,10 @@ export default function LoginScreen() {
               </Button>
               <Button
                 variant="link"
-                onClick={() => setStep('location')}
+                onClick={() => {
+                  setStep('location');
+                  setSelectedLocation(null);
+                }}
                 className="w-full"
               >
                 Cambiar de sede
