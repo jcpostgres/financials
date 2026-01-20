@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency } from '@/lib/utils';
 import { Percent, Landmark, Crown, Handshake, Building, User } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 function LocationProfitCard({ title, netProfit }: { title: string, netProfit: number }) {
   const localProfit = netProfit * 0.5;
@@ -57,6 +58,90 @@ function LocationProfitCard({ title, netProfit }: { title: string, netProfit: nu
     </Card>
   );
 }
+
+function SarriasProfitCard({ netProfit }: { netProfit: number }) {
+  const localProfitTotal = netProfit * 0.5;
+  const barbershopNetProfit = localProfitTotal * 0.95;
+  const headBarberProfit = localProfitTotal * 0.05;
+
+  const distributionPoolTotal = netProfit * 0.5;
+  const franchiseeProfit = distributionPoolTotal * 0.6;
+  const partnersPool = distributionPoolTotal * 0.4;
+  const partnersProfit = partnersPool * 0.6;
+  const plantProfit = partnersPool * 0.4;
+
+  const partners = [
+    { name: 'Engel', share: 33.3 },
+    { name: 'Roy', share: 33.3 },
+    { name: 'Katherine', share: 33.3 },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">Distribución para SARRIAS</CardTitle>
+        <CardDescription>Ganancia Neta del Período: {formatCurrency(netProfit)}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-muted/30">
+            <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2"><Landmark/> Ganancia Neta del Local (50%)</CardTitle>
+                <CardDescription>{formatCurrency(localProfitTotal)}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+                 <div className="flex items-center justify-between p-2 bg-background rounded-md">
+                    <span><Crown className="inline mr-2 text-yellow-500" /> 5% Jefe de Barberos</span>
+                    <span className="font-semibold">{formatCurrency(headBarberProfit)}</span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-background rounded-md">
+                    <span><Landmark className="inline mr-2 text-green-500" /> 95% Local</span>
+                    <span className="font-semibold">{formatCurrency(barbershopNetProfit)}</span>
+                </div>
+            </CardContent>
+        </Card>
+        
+        <Card className="bg-muted/30">
+            <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2"><Building/> Distribución (50%)</CardTitle>
+                 <CardDescription>{formatCurrency(distributionPoolTotal)}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-2 bg-background rounded-md">
+                    <span className="font-semibold">60% Franquiciado</span>
+                    <span className="font-bold text-primary">{formatCurrency(franchiseeProfit)}</span>
+                </div>
+                <div className="p-2 bg-background rounded-md space-y-2">
+                    <div className="flex items-center justify-between">
+                         <span className="font-semibold">40% Socios</span>
+                         <span className="font-bold text-primary">{formatCurrency(partnersPool)}</span>
+                    </div>
+                    <Separator/>
+                    <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground"><Handshake className="inline mr-2"/> 60% Ganancia Socios</span>
+                        <span className="font-semibold">{formatCurrency(partnersProfit)}</span>
+                    </div>
+                     <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground"><Building className="inline mr-2"/> 40% Ganancia Planta</span>
+                        <span className="font-semibold">{formatCurrency(plantProfit)}</span>
+                    </div>
+
+                    <div className="pt-2">
+                        <h4 className="text-xs font-semibold mb-1">Desglose Ganancia Socios:</h4>
+                         {partners.map(p => (
+                          <div key={p.name} className="flex items-center justify-between text-xs">
+                            <span className="flex items-center gap-1 text-muted-foreground"><User size={12} />{p.name} ({p.share}%)</span>
+                            <span className="font-medium">{formatCurrency(partnersProfit * (p.share / 100))}</span>
+                          </div>
+                        ))}
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function PlantProfitCard({ plantProfit }: { plantProfit: number }) {
   const partners = [
@@ -232,6 +317,8 @@ export default function GananciaPage() {
         <CardContent>
             {location === 'PSYFN' ? (
                 <PlantProfitCard plantProfit={periodNetProfit} />
+            ) : location === 'SARRIAS' ? (
+                <SarriasProfitCard netProfit={periodNetProfit} />
             ) : (
                 <LocationProfitCard title={`Distribución para ${location}`} netProfit={periodNetProfit}/>
             )}
