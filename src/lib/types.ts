@@ -57,6 +57,14 @@ export interface Expense {
   staffId?: string;
 }
 
+export interface Withdrawal {
+  id: string;
+  amount: number;
+  currency: 'USD' | 'BS';
+  timestamp: Date;
+  notes?: string;
+}
+
 export interface TicketItem {
   id: string;
   name:string;

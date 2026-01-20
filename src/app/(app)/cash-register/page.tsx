@@ -8,13 +8,15 @@ import { PageHeader } from '@/components/common/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Key, ArrowDownFromLine, Percent, Landmark, Crown, Handshake, Building } from 'lucide-react';
+import { Key, ArrowDownFromLine, Percent, Landmark, Crown, Handshake, Building, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import type { Transaction } from '@/lib/types';
+import type { Transaction, Withdrawal } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ConfirmDialog } from '@/components/common/confirm-dialog';
 
 
 function PaymentMethodTransactionsDialog({ method, amount, transactions, bcvRate }: { method: string, amount: number, transactions: Transaction[], bcvRate: number }) {
@@ -71,20 +73,70 @@ function PaymentMethodTransactionsDialog({ method, amount, transactions, bcvRate
   );
 }
 
+function WithdrawalForm({ onSave }: { onSave: (data: any) => void }) {
+    const [amount, setAmount] = useState('');
+    const [currency, setCurrency] = useState<'USD' | 'BS'>('USD');
+    const [notes, setNotes] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave({ amount: Number(amount), currency, notes });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4 p-6">
+            <div className="space-y-2">
+                <Label htmlFor="amount">Monto:</Label>
+                <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="currency">Moneda:</Label>
+                <Select value={currency} onValueChange={(v) => setCurrency(v as 'USD' | 'BS')}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="USD">Dólares ($)</SelectItem>
+                        <SelectItem value="BS">Bolívares (Bs.)</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="notes">Notas (Opcional):</Label>
+                <Input id="notes" value={notes} onChange={e => setNotes(e.target.value)} />
+            </div>
+            <Button type="submit" className="w-full">Registrar Retiro</Button>
+        </form>
+    );
+}
 
 export default function CashRegisterPage() {
-  const { transactions, expenses, customers, appSettings } = useAppState();
+  const { transactions, expenses, customers, appSettings, withdrawals, openModal, addOrEdit, handleDelete } = useAppState();
   const { toast } = useToast();
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [withdrawalToDelete, setWithdrawalToDelete] = useState<Withdrawal | null>(null);
 
   const handleCashClose = () => {
     toast({ title: 'Cierre de Caja Realizado', description: 'El resumen del día ha sido registrado (simulado).' });
   };
   
   const handleWithdrawal = () => {
-    toast({ title: 'Función no implementada', description: 'La lógica para retiros de caja aún no se ha definido.' });
+    openModal(
+        <WithdrawalForm onSave={(data) => addOrEdit('withdrawals', data)} />,
+        'Registrar Retiro de Caja'
+    );
   };
+  
+  const confirmDelete = (withdrawal: Withdrawal) => {
+    setWithdrawalToDelete(withdrawal);
+  };
+
+  const onConfirmDelete = () => {
+    if (withdrawalToDelete) {
+      handleDelete('withdrawals', withdrawalToDelete.id);
+      setWithdrawalToDelete(null);
+    }
+  };
+
 
   const setFilterPreset = (preset: 'today' | 'month' | 'year') => {
     const today = new Date();
@@ -103,29 +155,35 @@ export default function CashRegisterPage() {
     setEndDate(end.toISOString().split('T')[0]);
   };
 
-  const filteredTransactions = transactions.filter(tx => {
-    if (!startDate && !endDate) return true;
-    const txDate = tx.endTime;
-    const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
-    const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
-    if (start && txDate < start) return false;
-    if (end && txDate > end) return false;
-    return true;
-  }).sort((a,b) => b.endTime.getTime() - a.endTime.getTime());
+  const filterByDate = (items: (Transaction | Expense | Withdrawal)[], dateKey: 'endTime' | 'timestamp') => {
+     return items.filter(item => {
+        if (!startDate && !endDate) return true;
+        const itemDate = item[dateKey] as Date;
+        const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
+        const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
+        if (start && itemDate < start) return false;
+        if (end && itemDate > end) return false;
+        return true;
+    });
+  }
 
-  const filteredExpenses = expenses.filter(exp => {
-    if (!startDate && !endDate) return true;
-    const expDate = exp.timestamp;
-    const start = startDate ? new Date(new Date(startDate).setHours(0, 0, 0, 0)) : null;
-    const end = endDate ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) : null;
-    if (start && expDate < start) return false;
-    if (end && expDate > end) return false;
-    return true;
-  }).sort((a,b) => b.timestamp.getTime() - a.timestamp.getTime());
+  const filteredTransactions = filterByDate(transactions, 'endTime') as Transaction[];
+  const filteredExpenses = filterByDate(expenses, 'timestamp') as Expense[];
+  const filteredWithdrawals = filterByDate(withdrawals, 'timestamp') as Withdrawal[];
 
   const totalIncome = filteredTransactions.reduce((sum, tx) => sum + tx.totalAmount, 0);
   const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
   const netProfit = totalIncome - totalExpenses;
+  
+  const totalCashUSD = filteredTransactions.filter(tx => tx.paymentMethod === 'Efectivo USD').reduce((sum, tx) => sum + tx.totalAmount, 0);
+  const totalCashBSInUSD = filteredTransactions.filter(tx => tx.paymentMethod === 'Efectivo BS').reduce((sum, tx) => sum + tx.totalAmount, 0);
+  const totalCashBS = totalCashBSInUSD * appSettings.bcvRate;
+
+  const totalWithdrawalsUSD = filteredWithdrawals.filter(w => w.currency === 'USD').reduce((sum, w) => sum + w.amount, 0);
+  const totalWithdrawalsBS = filteredWithdrawals.filter(w => w.currency === 'BS').reduce((sum, w) => sum + w.amount, 0);
+  
+  const cashBalanceUSD = totalCashUSD - totalWithdrawalsUSD;
+  const cashBalanceBS = totalCashBS - totalWithdrawalsBS;
 
   const allPaymentMethods = ['Efectivo BS', 'Efectivo USD', 'Tarjeta', 'Transferencia', 'Pago Móvil'];
 
@@ -179,6 +237,22 @@ export default function CashRegisterPage() {
         </Card>
       </div>
 
+       <Card className="mb-6">
+        <CardHeader><CardTitle>Estado de Caja</CardTitle></CardHeader>
+        <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                <div>
+                    <p className="text-sm text-muted-foreground">Efectivo en Caja (USD)</p>
+                    <p className={`text-2xl font-bold ${cashBalanceUSD >= 0 ? 'text-green-400' : 'text-red-400'}`}>{formatCurrency(cashBalanceUSD)}</p>
+                </div>
+                <div>
+                    <p className="text-sm text-muted-foreground">Efectivo en Caja (Bs.)</p>
+                    <p className={`text-2xl font-bold ${cashBalanceBS >= 0 ? 'text-green-400' : 'text-red-400'}`}>Bs. {cashBalanceBS.toFixed(2)}</p>
+                </div>
+            </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader><CardTitle>Ingresos por Método de Pago</CardTitle></CardHeader>
@@ -197,6 +271,37 @@ export default function CashRegisterPage() {
           </CardContent>
         </Card>
         <Card>
+          <CardHeader><CardTitle>Historial de Retiros</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead>Monto</TableHead>
+                        <TableHead>Notas</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                </TableHeader>
+              <TableBody>
+                {filteredWithdrawals.length > 0 ? filteredWithdrawals.map(w => (
+                  <TableRow key={w.id}>
+                    <TableCell>{w.timestamp.toLocaleDateString()}</TableCell>
+                    <TableCell className="font-semibold">{w.currency === 'USD' ? formatCurrency(w.amount) : `Bs. ${w.amount.toFixed(2)}`}</TableCell>
+                    <TableCell>{w.notes}</TableCell>
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" onClick={() => confirmDelete(w)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </TableCell>
+                  </TableRow>
+                )) : <TableRow><TableCell colSpan={4} className="text-center">No hay retiros para el período.</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      
+       <Card className="mt-6">
           <CardHeader><CardTitle>Gastos del Período</CardTitle></CardHeader>
           <CardContent className="p-0">
             <Table>
@@ -214,7 +319,7 @@ export default function CashRegisterPage() {
             </Table>
           </CardContent>
         </Card>
-      </div>
+
 
       <Card className="mt-6">
         <CardHeader><CardTitle>Transacciones del Período</CardTitle></CardHeader>
@@ -241,6 +346,13 @@ export default function CashRegisterPage() {
           </Table>
         </CardContent>
       </Card>
+       <ConfirmDialog
+        isOpen={!!withdrawalToDelete}
+        onClose={() => setWithdrawalToDelete(null)}
+        onConfirm={onConfirmDelete}
+        title="Confirmar Eliminación"
+        description={`¿Está seguro de que desea eliminar este retiro? Esta acción no se puede deshacer.`}
+      />
     </div>
   );
 }

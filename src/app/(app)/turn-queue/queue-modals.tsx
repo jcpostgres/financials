@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Scissors, Package, Sandwich, Gamepad2, Gift } from 'lucide-react';
+import { Plus, Trash2, Scissors, Package, Sandwich, Gamepad2, Gift, ChevronsUpDown } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { formatCurrency } from '@/lib/utils';
 import type { TicketItem } from '@/lib/types';
@@ -92,7 +92,7 @@ export function NewServiceForm() {
                 if (existing) {
                     return prev.map(i => i.id === itemToAdd.id && i.type === type ? { ...i, quantity: i.quantity + quantity } : i);
                 } else {
-                    return [...prev, { id: itemToAdd.id, name: itemToAdd.name, price: Number(itemToAdd.price), quantity, type, category: itemToAdd.category }];
+                    return [...prev, { id: itemToAdd.id, name: itemToAdd.name, price: Number(itemToAdd.price), quantity, type, category: itemToAdd.category as string }];
                 }
             });
         }
@@ -128,6 +128,18 @@ export function NewServiceForm() {
     
     const handleRemoveItem = (index: number) => {
         setItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleMoveItem = (index: number, direction: 'up' | 'down') => {
+        if (direction === 'up' && index === 0) return;
+        if (direction === 'down' && index === items.length - 1) return;
+
+        const newItems = [...items];
+        const itemToMove = newItems[index];
+        const swapIndex = direction === 'up' ? index - 1 : index + 1;
+        newItems[index] = newItems[swapIndex];
+        newItems[swapIndex] = itemToMove;
+        setItems(newItems);
     };
 
     const handleStartService = () => {
@@ -236,8 +248,14 @@ export function NewServiceForm() {
                                 <div>
                                     {item.name} <span className="text-xs text-muted-foreground">x{item.quantity}</span>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <span>{formatCurrency(item.price * item.quantity)}</span>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMoveItem(index, 'up')} disabled={index === 0}>
+                                      <ChevronsUpDown className="h-4 w-4 transform -rotate-90"/>
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMoveItem(index, 'down')} disabled={index === items.length - 1}>
+                                      <ChevronsUpDown className="h-4 w-4 transform rotate-90"/>
+                                    </Button>
                                     <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleRemoveItem(index)}>
                                         <Trash2 className="h-4 w-4"/>
                                     </Button>
