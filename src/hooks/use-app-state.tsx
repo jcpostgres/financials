@@ -7,6 +7,7 @@ import type {
 import { mockServices, mockProducts, mockStaff, mockCustomers } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './use-auth';
+import { loadLocationData, saveLocationData } from '@/lib/firestoreService';
 
 interface LocationData {
   services: Service[];
@@ -73,39 +74,43 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [allData, setAllData] = useState<Record<string, LocationData>>({});
 
   useEffect(() => {
-    if (isLoggedIn) {
-      try {
-        const storedData = localStorage.getItem('nordicoAppData');
-        if (storedData) {
-          const parsedData = JSON.parse(storedData, (key, value) => {
-            if (['startTime', 'endTime', 'timestamp', 'createdAt', 'date'].includes(key) && value) {
-              return new Date(value);
-            }
-            return value;
-          });
-          // Ensure default password if not present
-          Object.keys(parsedData).forEach(loc => {
-            if (!parsedData[loc].appSettings.password) {
-              parsedData[loc].appSettings.password = 'ADMI14';
-            }
-          });
-          setAllData(parsedData);
+    // On login, try to load remote data from Firestore for the current location.
+    if (isLoggedIn && location) {
+      (async () => {
+        try {
+          const remote = await loadLocationData(location);
+          if (remote) {
+            // Ensure default password if not present
+            if (!remote.appSettings) remote.appSettings = initialLocationData.appSettings;
+            if (!remote.appSettings.password) remote.appSettings.password = 'ADMI14';
+            setAllData(prev => ({ ...prev, [location]: remote }));
+            return;
+          }
+
+          // If there's no remote data, initialize Firestore document with defaults
+          try {
+            await saveLocationData(location, initialLocationData);
+            setAllData(prev => ({ ...prev, [location]: initialLocationData }));
+          } catch (e) {
+            console.error('Failed to create initial remote data', e);
+          }
+        } catch (error) {
+          console.error('Failed to load data from Firestore/localStorage', error);
         }
-      } catch (error) {
-        console.error("Failed to load data from localStorage", error);
-      }
+      })();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, location]);
 
   useEffect(() => {
     if (isLoggedIn && Object.keys(allData).length > 0) {
-      try {
-        localStorage.setItem('nordicoAppData', JSON.stringify(allData));
-      } catch (error) {
-        console.error("Failed to save data to localStorage", error);
+      // Persist current location to Firestore (best-effort)
+      if (location && allData[location]) {
+        saveLocationData(location, allData[location] as Partial<LocationData>).catch(err => {
+          console.error('Failed to save location data to Firestore', err);
+        });
       }
     }
-  }, [allData, isLoggedIn]);
+  }, [allData, isLoggedIn, location]);
 
   const currentLocationData = useMemo(() => {
     if (!location) return initialLocationData;
